@@ -29,6 +29,7 @@ class Authenticate(Controller):
         self.make_keypad()
         self.keypad_frame.grid(row=0, column=0, padx=5, pady=5, sticky=NSEW)
         # User Menu Items
+        self.employee_var = StringVar()
 
 
     def make_keypad(self):
@@ -57,9 +58,10 @@ class Authenticate(Controller):
                 self.pin_var.set(self.pin)
 
         elif entry == 'Enter':
-            # Hash pin
-            # .get() employee from dropdown var
-            # Retrieve pin from db & compare
+            employee = Database.Employee.load(self.employee_var.get())
+            pin_hash = hashlib.sha256(self.pin.encode("utf-8")).hexdigest()
+            if employee.pin == pin_hash:
+                UserMenu()
             self.pin = ""
             self.pin_var.set(self.pin)
             pass
@@ -69,13 +71,20 @@ class Authenticate(Controller):
 
 
 
+class UserMenu:
 
+    def __init__(self):
+        Controller.frame.destroy()
+        Controller.frame = Frame(Controller.master)
+        label = Label(Controller.frame, text="Test")
+        Controller.frame.grid()
+        label.grid()
 
 
 LOG_FILENAME = "TimeClock.log"
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
 root = Tk()
-root.title(os.environ["TIMECLOCK_NAME"])
+root.title("Time Clock")
 root.geometry("800x480")
 app = Controller(root)
 root.mainloop()
