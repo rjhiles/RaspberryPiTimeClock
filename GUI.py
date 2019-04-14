@@ -3,6 +3,7 @@
 from tkinter import *
 import logging
 import hashlib
+import Database
 import os
 
 class Controller:
@@ -29,7 +30,10 @@ class Authenticate(Controller):
         self.make_keypad()
         self.keypad_frame.grid(row=0, column=0, padx=5, pady=5, sticky=NSEW)
         # User Menu Items
+        self.user_list_frame = Frame(Controller.frame)
         self.employee_var = StringVar()
+        self.user_listbox = Listbox(self.user_list_frame)
+        self.build_user_list()
 
 
     def make_keypad(self):
@@ -69,7 +73,11 @@ class Authenticate(Controller):
             self.pin = self.pin + entry
             self.pin_var.set(self.pin)
 
-
+    def build_user_list(self):
+        user_dict = Database.Employee.fetch_names_and_ids()
+        for employee in user_dict.values():
+            self.user_listbox.insert(END, employee)
+        self.user_listbox.grid()
 
 class UserMenu:
 
