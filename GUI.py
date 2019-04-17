@@ -4,7 +4,6 @@ from tkinter import *
 import logging
 import hashlib
 import Database
-import os
 
 class Controller:
 
@@ -20,20 +19,21 @@ class Controller:
 class Authenticate(Controller):
 
     def __init__(self):
-        Controller.frame = LabelFrame(Controller.master, text="Enter Your Pin")
+        Controller.frame = Frame(Controller.master)
         Controller.frame.grid(row=0, column=0, padx=5, pady=20, sticky=NSEW)
         # Keypad Items
         self.pin = ""
-        self.keypad_frame = Frame(Controller.frame)
+        self.keypad_frame = LabelFrame(Controller.frame, text="Enter Your Pin")
         self.pin_var = StringVar()
         self.pin_entry = Entry(self.keypad_frame, textvariable=self.pin_var, show="*")
         self.make_keypad()
         self.keypad_frame.grid(row=0, column=0, padx=5, pady=5, sticky=NSEW)
         # User Menu Items
         self.user_list_frame = Frame(Controller.frame)
-        self.employee_var = StringVar()
-        self.user_listbox = Listbox(self.user_list_frame)
+        self.user_listbox = Listbox(self.user_list_frame, font=("Calibri", 25))
+        self.user_dict = None
         self.build_user_list()
+        self.user_list_frame.grid(row=0, column=1, padx=5, pady=5)
 
 
     def make_keypad(self):
@@ -62,10 +62,11 @@ class Authenticate(Controller):
                 self.pin_var.set(self.pin)
 
         elif entry == 'Enter':
-            employee = Database.Employee.load(self.employee_var.get())
+            employee = Database.Employee(id=self.user_dict[self.user_listbox.get(ACTIVE)])
+            employee.load()
             pin_hash = hashlib.sha256(self.pin.encode("utf-8")).hexdigest()
             if employee.pin == pin_hash:
-                UserMenu()
+                UserMenu(employee)
             self.pin = ""
             self.pin_var.set(self.pin)
             pass
@@ -74,19 +75,38 @@ class Authenticate(Controller):
             self.pin_var.set(self.pin)
 
     def build_user_list(self):
-        user_dict = Database.Employee.fetch_names_and_ids()
-        for employee in user_dict.values():
+        self.user_dict = Database.Employee.fetch_ids_and_names()
+        for employee in self.user_dict.keys():
             self.user_listbox.insert(END, employee)
-        self.user_listbox.grid()
+        scroll = Scrollbar(self.user_list_frame, width=60)
+        scroll.config(command=self.user_listbox.yview())
+        self.user_listbox.config(width=0, yscrollcommand=scroll.set)
+        self.user_listbox.grid(row=0, column=0)
+        scroll.grid(row=0, column=1,sticky=NS)
 
-class UserMenu:
 
-    def __init__(self):
+class UserMenu(Controller):
+
+    def __init__(self, employee):
+        employee = employee
         Controller.frame.destroy()
         Controller.frame = Frame(Controller.master)
-        label = Label(Controller.frame, text="Test")
         Controller.frame.grid()
-        label.grid()
+        clock_frame = Frame(Controller.frame)
+        clock_frame.grid(row=0, column=0)
+        clock_in = Button(clock_frame,
+                          text="Clock In",
+                          height=4,
+                          width=25,
+                          command=lambda x: Database.TimeEntries.clock_in(employee.id))
+        clock_out = Button(clock_frame,
+                           text="Clock Out",
+                           height=4,
+                           width=25,
+                           command=lambda x: Database.TimeEntries.clock_out(employee.id))
+        clock_in.grid(row=0)
+        clock_out.grid(row=1)
+
 
 
 LOG_FILENAME = "TimeClock.log"
