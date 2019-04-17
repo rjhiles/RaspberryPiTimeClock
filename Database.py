@@ -1,5 +1,5 @@
 #! /usr/bin/python3
-
+import datetime
 from DBconn import DBConn
 
 class Employee:
@@ -52,6 +52,90 @@ class Employee:
             employee_dict[key] = value
         return employee_dict
 
+
+class TimeEntries:
+
+    table_name = "time_entries"
+
+    def __init__(self,
+                 id=None,
+                 employee_id=None,
+                 entry_date=None,
+                 clock_in=None,
+                 clock_out=None,
+                 total_time=None,
+                 error_entry=None,
+                 updated=None):
+        self.id = id
+        self.employee_id    = employee_id
+        self.entry_date     = entry_date
+        self.clock_in       = clock_in
+        self.clock_out      = clock_out
+        self.total_time     = total_time
+        self.error_entry    = error_entry
+        self.updated        = updated
+
+    def clock_in(self):
+        pass
+
+def select_query_format(db_object, select_all=False):
+    temp_param_dict = db_object.__dict__
+    param_dict = {}
+    for key in temp_param_dict.keys():
+        if temp_param_dict[key] != "" and temp_param_dict[key] != None:
+            param_dict[key] = temp_param_dict[key]
+    params = ""
+    if select_all == False:
+        for key in param_dict.keys():
+            params = params + key + ', '
+        params = params[0:len(params) - 2]
+    else:
+        params = "*"
+    filters = ""
+    for key in param_dict.keys():
+        if isinstance(param_dict[key], str):
+            value = " = '{}'".format(param_dict[key])
+        elif isinstance(param_dict[key], datetime.date):
+            value = "'{}'".format(param_dict[key])
+        elif isinstance(param_dict[key], datetime.datetime):
+            value = "'{}'".format(param_dict[key])
+        else:
+            value = " = {}".format(param_dict[key])
+        filters = filters + key + value + " AND "
+    filters = filters[0:len(filters) - 4]
+    return """SELECT {} FROM {} WHERE {}""".format(params, db_object.table_name, filters)
+
+def insert_query_format(db_object):
+    """
+    Formats an object's dictionary of instance variables and a table name into an SQL query
+    :param db_object: Object, database model
+    :param table_name: string
+    :return: Syntactically correct SQL query string
+    """
+    temp_param_dict = db_object.__dict__
+    print(temp_param_dict)
+    param_dict = {}
+    for key in temp_param_dict.keys():
+        if temp_param_dict[key] != "" and temp_param_dict[key] != None:
+            param_dict[key] = temp_param_dict[key]
+    print(param_dict)
+    fields = ""
+    for key in param_dict.keys():
+        fields = fields + key + ', '
+    fields = fields[0:len(fields) - 2]
+    values = ""
+    for key in param_dict.keys():
+        if isinstance(param_dict[key], str):
+            value = "'{}'".format(param_dict[key])
+        elif isinstance(param_dict[key], datetime.date):
+            value = "'{}'".format(param_dict[key])
+        elif isinstance(param_dict[key], datetime.datetime):
+            value = "'{}'".format(param_dict[key])
+        else:
+            value = "{}".format(param_dict[key])
+        values = values + value + ", "
+    values = values[0:len(values) - 2]
+    return """INSERT INTO {} ({}) VALUES ({})""".format(db_object.table_name, fields, values)
 
 def select_query(query_string):
     with DBConn() as conn:
