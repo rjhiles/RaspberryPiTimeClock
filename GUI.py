@@ -106,8 +106,8 @@ class UserMenu(Controller):
                            height=4,
                            width=25,
                            command=lambda x: Database.TimeEntries.clock_out(employee.id))
-        clock_in.grid(row=0)
-        clock_out.grid(row=1)
+        clock_in.grid(row=0, padx=10, pady=5)
+        clock_out.grid(row=1, padx=10, pady=5)
 
 
 # change process name from just python to TimeClock so we can use a bash script to make sure it is still alive

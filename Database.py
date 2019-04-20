@@ -131,6 +131,9 @@ def insert_query_format(db_object):
     values = values[0:len(values) - 2]
     return """INSERT INTO {} ({}) VALUES ({})""".format(db_object.table_name, fields, values)
 
+def update_query_format(db_object):
+
+
 def select_query(query_string):
     with DBConn() as conn:
         conn.query(query_string)
