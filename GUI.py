@@ -4,6 +4,8 @@ from tkinter import *
 import logging
 import hashlib
 import Database
+from ctypes import cdll, byref, create_string_buffer
+
 
 class Controller:
 
@@ -108,6 +110,12 @@ class UserMenu(Controller):
         clock_out.grid(row=1)
 
 
+# change process name from just python to TimeClock so we can use a bash script to make sure it is still alive
+procname = "TimeClock"
+libc = cdll.LoadLibrary('libc.so.6')
+buff = create_string_buffer(len(procname) +1)
+buff.value = procname.encode('utf-8')
+libc.prctl(15, byref(buff), 0, 0, 0)
 
 LOG_FILENAME = "TimeClock.log"
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
