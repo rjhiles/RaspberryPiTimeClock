@@ -79,23 +79,30 @@ class TimeEntries:
         # TODO: Check last action
         pass
 
-def select_query_format(db_object, select_all=False):
-    temp_param_dict = db_object.__dict__
-    param_dict = {}
-    for key in temp_param_dict.keys():
-        if temp_param_dict[key] != "" and temp_param_dict[key] != None:
-            param_dict[key] = temp_param_dict[key]
+def aggregate_rows(results):
+    rows= []
+    for i in range(0, results.num_rows()):
+        temp= results.fetch_row()
+        rows.append(temp[0])
+    return rows
+
+def update_query_format(db_object):
+    param_dict = build_param_dict(db_object.__dict__)
+    values = ""
+    for key in param_dict.keys():
+        if key != "id":
+            value = quote_check(param_dict[key])
+            values += " {} = {},".format(key, value)
+    values = values[0:len(values) - 1]
+    return "UPDATE {} SET{} WHERE ID = {}".format(db_object.table_name, values, param_dict['id'])
+
+def select_query_format(db_object):
+    param_dict = build_param_dict(db_object.__dict__)
     filters = ""
     for key in param_dict.keys():
-        if isinstance(param_dict[key], str):
-            value = " = '{}'".format(param_dict[key])
-        elif isinstance(param_dict[key], datetime.date):
-            value = "='{}'".format(param_dict[key])
-        elif isinstance(param_dict[key], datetime.datetime):
-            value = "='{}'".format(param_dict[key])
-        else:
-            value = " = {}".format(param_dict[key])
-        filters = filters + key + value + " AND "
+        value = quote_check(param_dict[key])
+        filter = "{} = {} AND ".format(key, value)
+        filters = filters + filter
     filters = filters[0:len(filters) - 4]
     return """SELECT * FROM {} WHERE {}""".format(db_object.table_name, filters)
 
@@ -106,32 +113,35 @@ def insert_query_format(db_object):
     :param table_name: string
     :return: Syntactically correct SQL query string
     """
-    temp_param_dict = db_object.__dict__
-    print(temp_param_dict)
-    param_dict = {}
-    for key in temp_param_dict.keys():
-        if temp_param_dict[key] != "" and temp_param_dict[key] != None:
-            param_dict[key] = temp_param_dict[key]
-    print(param_dict)
+    param_dict = build_param_dict(db_object.__dict__)
     fields = ""
     for key in param_dict.keys():
         fields = fields + key + ', '
     fields = fields[0:len(fields) - 2]
     values = ""
     for key in param_dict.keys():
-        if isinstance(param_dict[key], str):
-            value = "'{}'".format(param_dict[key])
-        elif isinstance(param_dict[key], datetime.date):
-            value = "'{}'".format(param_dict[key])
-        elif isinstance(param_dict[key], datetime.datetime):
-            value = "'{}'".format(param_dict[key])
-        else:
-            value = "{}".format(param_dict[key])
+        value = quote_check(param_dict[key])
         values = values + value + ", "
     values = values[0:len(values) - 2]
     return """INSERT INTO {} ({}) VALUES ({})""".format(db_object.table_name, fields, values)
 
-def update_query_format(db_object):
+def quote_check(data):
+    if isinstance(data, str):
+        value = "'{}'".format(data)
+    elif isinstance(data, datetime.date):
+        value = "'{}'".format(data)
+    elif isinstance(data, datetime.datetime):
+        value = "'{}'".format(data)
+    else:
+        value = "{}".format(data)
+    return value
+
+def build_param_dict(dict):
+    param_dict={}
+    for key in dict.keys():
+        if dict[key] != "" and dict[key] != None:
+            param_dict[key] = dict[key]
+    return param_dict
 
 
 def select_query(query_string):
@@ -141,14 +151,7 @@ def select_query(query_string):
         rows = aggregate_rows(result)
     return rows
 
-def update_query(query_string):
+def commit_to_db(query):
     with DBConn() as conn:
-        conn.query(query_string)
+        conn.query(query)
         conn.commit()
-
-def aggregate_rows(results):
-    rows= []
-    for i in range(0, results.num_rows()):
-        temp= results.fetch_row()
-        rows.append(temp[0])
-    return rows
