@@ -2,7 +2,26 @@
 import datetime
 from DBconn import DBConn
 
-class Employee:
+class Database:
+
+    def load(self):
+        result = select_query(select_query_format(self))
+        for number, key in enumerate(self.__dict__.keys()):
+            item = result[0][number]
+            if isinstance(item, str):
+                assign = "self.{} = \'{}\'".format(key, item)
+            elif isinstance(item, datetime.datetime):
+                assign = "self.{} = datetime.datetime.strptime(\'{}\', \'%Y-%m-%d %H:%M:%S\')".format(key, item)
+            elif isinstance(item, datetime.date):
+                assign = "self.{} = datetime.datetime.strptime(\'{}\', \'%Y-%m-%d\')".format(key, item)
+            elif isinstance(item, datetime.timedelta):
+                assign = "self.{} = datetime.timedelta({})".format(key, item.total_seconds())
+            else:
+                assign = "self.{} = {}".format(key, item)
+            exec(assign)
+
+
+class Employee(Database):
 
     table_name = "employee"
 
@@ -12,15 +31,15 @@ class Employee:
         self.last_name = last_name
         self.preferred_name = preferred_name
         self.pin = pin
+        if self.id is not None:
+            self.load()
 
-    def load(self):
-        query = """SELECT * FROM employee WHERE id = {}""".format(self.id)
-        result = select_query(query)
-        self.id, self.first_name, self.last_name, self.preferred_name, self.pin = result[0]
+    # def load(self):
+    #     result = select_query(select_query_format(self))
+    #     self.id, self.first_name, self.last_name, self.preferred_name, self.pin = result[0]
 
     def update(self):
-        query = """UPDATE employee SET first_name='{}', last_name='{}', preferred_name='{}', pin='{}' WHERE id ={}"""
-        update_query(query.format(self.first_name, self.last_name, self.preferred_name, self.pin, self.id))
+        commit_to_db(update_query_format(self))
 
     @staticmethod
     def fetch_names_and_ids():
@@ -53,7 +72,7 @@ class Employee:
         return employee_dict
 
 
-class TimeEntries:
+class TimeEntries(Database):
 
     table_name = "time_entries"
 
@@ -74,6 +93,12 @@ class TimeEntries:
         self.total_time     = total_time
         self.error_entry    = error_entry
         self.updated        = updated
+        if self.id is not None:
+            self.load()
+
+    # def load(self):
+    #     pass
+
 
     def clock_in(self):
         # TODO: Check last action
