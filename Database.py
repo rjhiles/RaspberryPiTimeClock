@@ -2,114 +2,113 @@
 import datetime
 from DBconn import DBConn
 
-class Database:
-    class Table:
+class Table:
 
-        def load(self):
-            result = self.select_query()
-            for number, key in enumerate(self.__dict__.keys()):
-                item = result[0][number]
-                if isinstance(item, str):
-                    assign = "self.{} = \'{}\'".format(key, item)
-                elif isinstance(item, datetime.datetime):
-                    assign = "self.{} = datetime.datetime.strptime(\'{}\', \'%Y-%m-%d %H:%M:%S\')".format(key, item)
-                elif isinstance(item, datetime.date):
-                    assign = "self.{} = datetime.datetime.strptime(\'{}\', \'%Y-%m-%d\')".format(key, item)
-                elif isinstance(item, datetime.timedelta):
-                    assign = "self.{} = datetime.timedelta({})".format(key, item.total_seconds())
-                else:
-                    assign = "self.{} = {}".format(key, item)
-                exec(assign)
-
-        def update(self):
-            self.commit_to_db(self.update_query_format())
-
-        def insert(self):
-            self.commit_to_db(self.insert_query_format())
-
-        # TODO: Delete method
-
-        def select_query_format(self):
-            param_dict = self.build_param_dict()
-            if len(param_dict) > 0:
-                filters = ""
-                for key in param_dict.keys():
-                    value = self.quote_check(param_dict[key])
-                    q_filter = "{} = {} AND ".format(key, value)
-                    filters = filters + q_filter
-                filters = filters[0:len(filters) - 4]
-                query_string = """SELECT * FROM {} WHERE {}""".format(self.table_name, filters)
+    def load(self):
+        result = self.select_query()
+        for number, key in enumerate(self.__dict__.keys()):
+            item = result[0][number]
+            if isinstance(item, str):
+                assign = "self.{} = \'{}\'".format(key, item)
+            elif isinstance(item, datetime.datetime):
+                assign = "self.{} = datetime.datetime.strptime(\'{}\', \'%Y-%m-%d %H:%M:%S\')".format(key, item)
+            elif isinstance(item, datetime.date):
+                assign = "self.{} = datetime.datetime.strptime(\'{}\', \'%Y-%m-%d\')".format(key, item)
+            elif isinstance(item, datetime.timedelta):
+                assign = "self.{} = datetime.timedelta({})".format(key, item.total_seconds())
             else:
-                query_string = """SELECT * FROM {} LIMIT 100""".format(self.table_name)
-            return query_string
+                assign = "self.{} = {}".format(key, item)
+            exec(assign)
 
-        def update_query_format(self):
-            param_dict = self.build_param_dict()
-            values = ""
-            for key in param_dict.keys():
-                if key != "id":
-                    value = self.quote_check(param_dict[key])
-                    values += " {} = {},".format(key, value)
-            values = values[0:len(values) - 1]
-            return "UPDATE {} SET{} WHERE ID = {}".format(self.table_name, values, param_dict['id'])
+    def update(self):
+        self.commit_to_db(self.update_query_format())
 
-        def insert_query_format(self):
-            """
-            Formats an object's dictionary of instance variables and a table name into an SQL query
-            :return: Syntactically correct SQL query string
-            """
-            param_dict = self.build_param_dict()
-            fields = ""
-            for key in param_dict.keys():
-                fields = fields + key + ', '
-            fields = fields[0:len(fields) - 2]
-            values = ""
+    def insert(self):
+        self.commit_to_db(self.insert_query_format())
+
+    # TODO: Delete method
+
+    def select_query_format(self):
+        param_dict = self.build_param_dict()
+        if len(param_dict) > 0:
+            filters = ""
             for key in param_dict.keys():
                 value = self.quote_check(param_dict[key])
-                values = values + value + ", "
-            values = values[0:len(values) - 2]
+                q_filter = "{} = {} AND ".format(key, value)
+                filters = filters + q_filter
+            filters = filters[0:len(filters) - 4]
+            query_string = """SELECT * FROM {} WHERE {}""".format(self.table_name, filters)
+        else:
+            query_string = """SELECT * FROM {} LIMIT 100""".format(self.table_name)
+        return query_string
 
-            return """INSERT INTO {} ({}) VALUES ({})""".format(self.table_name, fields, values)
+    def update_query_format(self):
+        param_dict = self.build_param_dict()
+        values = ""
+        for key in param_dict.keys():
+            if key != "id":
+                value = self.quote_check(param_dict[key])
+                values += " {} = {},".format(key, value)
+        values = values[0:len(values) - 1]
+        return "UPDATE {} SET{} WHERE ID = {}".format(self.table_name, values, param_dict['id'])
 
-        def select_query(self):
-            with DBConn() as conn:
-                conn.query(self.select_query_format())
-                result = conn.store_result()
-                rows = self.aggregate_rows(result)
-            return rows
+    def insert_query_format(self):
+        """
+        Formats an object's dictionary of instance variables and a table name into an SQL query
+        :return: Syntactically correct SQL query string
+        """
+        param_dict = self.build_param_dict()
+        fields = ""
+        for key in param_dict.keys():
+            fields = fields + key + ', '
+        fields = fields[0:len(fields) - 2]
+        values = ""
+        for key in param_dict.keys():
+            value = self.quote_check(param_dict[key])
+            values = values + value + ", "
+        values = values[0:len(values) - 2]
 
-        @staticmethod
-        def commit_to_db(query):
-            with DBConn() as conn:
-                conn.query(query)
-                conn.commit()
+        return """INSERT INTO {} ({}) VALUES ({})""".format(self.table_name, fields, values)
 
-        def build_param_dict(self):
-            param_dict = {}
-            for key in self.__dict__.keys():
-                if self.__dict__[key] != "" and self.__dict__[key] != None:
-                    param_dict[key] = self.__dict__[key]
-            return param_dict
+    def select_query(self):
+        with DBConn() as conn:
+            conn.query(self.select_query_format())
+            result = conn.store_result()
+            rows = self.aggregate_rows(result)
+        return rows
 
-        @staticmethod
-        def quote_check(data):
-            if isinstance(data, str):
-                value = "'{}'".format(data)
-            elif isinstance(data, datetime.date):
-                value = "'{}'".format(data)
-            elif isinstance(data, datetime.datetime):
-                value = "'{}'".format(data)
-            else:
-                value = "{}".format(data)
-            return value
+    @staticmethod
+    def commit_to_db(query):
+        with DBConn() as conn:
+            conn.query(query)
+            conn.commit()
 
-        @staticmethod
-        def aggregate_rows(results):
-            rows = []
-            for i in range(0, results.num_rows()):
-                temp = results.fetch_row()
-                rows.append(temp[0])
-            return rows
+    def build_param_dict(self):
+        param_dict = {}
+        for key in self.__dict__.keys():
+            if self.__dict__[key] != "" and self.__dict__[key] != None:
+                param_dict[key] = self.__dict__[key]
+        return param_dict
+
+    @staticmethod
+    def quote_check(data):
+        if isinstance(data, str):
+            value = "'{}'".format(data)
+        elif isinstance(data, datetime.date):
+            value = "'{}'".format(data)
+        elif isinstance(data, datetime.datetime):
+            value = "'{}'".format(data)
+        else:
+            value = "{}".format(data)
+        return value
+
+    @staticmethod
+    def aggregate_rows(results):
+        rows = []
+        for i in range(0, results.num_rows()):
+            temp = results.fetch_row()
+            rows.append(temp[0])
+        return rows
 
 
 class Employee(Table):
