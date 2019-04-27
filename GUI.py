@@ -33,7 +33,7 @@ class Authenticate(Controller):
         # User Menu Items
         self.user_list_frame = Frame(Controller.frame)
         self.user_listbox = Listbox(self.user_list_frame, font=("Calibri", 25))
-        self.user_dict = None
+        self.user_dict = {}
         self.build_user_list()
         self.user_list_frame.grid(row=0, column=1, padx=5, pady=5)
 
@@ -77,9 +77,13 @@ class Authenticate(Controller):
             self.pin_var.set(self.pin)
 
     def build_user_list(self):
-        self.user_dict = Database.Employee.fetch_ids_and_names()
-        for employee in self.user_dict.keys():
-            self.user_listbox.insert(END, employee)
+        emp = Database.Employee()
+        employees = emp.select_query()
+        for employee in employees:
+            emp.load(employee)
+            emp_name = "{} {}".format(emp.preferred_name, emp.last_name)
+            self.user_dict[emp_name] = emp.id
+            self.user_listbox.insert(END, emp_name)
         scroll = Scrollbar(self.user_list_frame, width=60)
         scroll.config(command=self.user_listbox.yview())
         self.user_listbox.config(width=0, yscrollcommand=scroll.set)
@@ -108,6 +112,11 @@ class UserMenu(Controller):
                            command=lambda x: Database.TimeEntries.clock_out(employee.id))
         clock_in.grid(row=0, padx=10, pady=5)
         clock_out.grid(row=1, padx=10, pady=5)
+
+    # def clock_in(self):
+    #     # Check last entry
+    #         #if there is not an open entry;
+    #             # post time entry
 
 
 # change process name from just python to TimeClock so we can use a bash script to make sure it is still alive
