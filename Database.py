@@ -4,10 +4,14 @@ from DBconn import DBConn
 
 class Table:
 
-    def load(self):
-        result = self.select_query()
+    def load(self, record=None):
+        if record is None:
+            result = self.select_query()
+            result = result[0]
+        else:
+            result = record
         for number, key in enumerate(self.__dict__.keys()):
-            item = result[0][number]
+            item = result[number]
             if isinstance(item, str):
                 assign = "self.{} = \'{}\'".format(key, item)
             elif isinstance(item, datetime.datetime):
@@ -124,43 +128,6 @@ class Employee(Table):
         if self.id is not None:
             self.load()
 
-    # def load(self):
-    #     result = select_query(select_query_format(self))
-    #     self.id, self.first_name, self.last_name, self.preferred_name, self.pin = result[0]
-
-    def update(self):
-        commit_to_db(update_query_format(self))
-
-    @staticmethod
-    def fetch_names_and_ids():
-        """
-        Returns a dictionary with ids and names, formats name as preferred first name and last name
-        :return: dict: keys are id, values are names formatted for display
-        """
-        result = select_query("""SELECT id, preferred_name, last_name FROM employee""")
-        employee_dict = {}
-        for i in range(0, len(result)):
-            row = result[i]
-            key = row[0]
-            value = row[1] + " " + row[2]
-            employee_dict[key] = value
-        return employee_dict
-
-    @staticmethod
-    def fetch_ids_and_names():
-        """
-        Retrieves employee names and ids, formats name as preferred first name and last name
-        :return: dict: keys are names formatted for display, values are ids
-        """
-        result = select_query("""SELECT id, preferred_name, last_name FROM employee""")
-        employee_dict = {}
-        for i in range(0, len(result)):
-            row = result[i]
-            key = row[1] + " " + row[2]
-            value = row[0]
-            employee_dict[key] = value
-        return employee_dict
-
 
 class TimeEntries(Table):
 
@@ -185,12 +152,4 @@ class TimeEntries(Table):
         self.updated        = updated
         if self.id is not None:
             self.load()
-
-    # def load(self):
-    #     pass
-
-
-    def clock_in(self):
-        # TODO: Check last action
-        pass
 
