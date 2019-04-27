@@ -37,8 +37,13 @@ class Table:
         if len(param_dict) > 0:
             filters = ""
             for key in param_dict.keys():
-                value = self.quote_check(param_dict[key])
-                q_filter = "{} = {} AND ".format(key, value)
+                value = param_dict[key]
+                if isinstance(value, str) and value.replace(" ", "") == "NULL":
+                    q_filter = "{} IS NULL AND ".format(key)
+                elif isinstance(value, Between):
+                    q_filter = "({} BETWEEN {} AND {}) AND ".format(key, value.start, value.end)
+                else:
+                    q_filter = "{} = {} AND ".format(key, self.quote_check(value))
                 filters = filters + q_filter
             filters = filters[0:len(filters) - 4]
             query_string = """SELECT * FROM {} WHERE {}""".format(self.table_name, filters)
@@ -97,7 +102,10 @@ class Table:
     @staticmethod
     def quote_check(data):
         if isinstance(data, str):
-            value = "'{}'".format(data)
+            if data.replace(" ", "") == "NULL":
+                value = "NULL"
+            else:
+                value = "'{}'".format(data)
         elif isinstance(data, datetime.date):
             value = "'{}'".format(data)
         elif isinstance(data, datetime.datetime):
@@ -114,6 +122,12 @@ class Table:
             rows.append(temp[0])
         return rows
 
+
+class Between:
+
+    def __init__(self, start, end):
+        self.start = Table.quote_check(start)
+        self.end = Table.quote_check(end)
 
 class Employee(Table):
 
@@ -153,3 +167,7 @@ class TimeEntries(Table):
         if self.id is not None:
             self.load()
 
+
+def between(start, end):
+    r = Between(start, end)
+    return r
