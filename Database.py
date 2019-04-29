@@ -123,7 +123,6 @@ class Table:
         return rows
 
 
-class Between:
 
     def __init__(self, start, end):
         self.start = Table.quote_check(start)

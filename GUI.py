@@ -3,7 +3,7 @@
 from tkinter import *
 import logging
 import hashlib
-import Database
+from Database import *
 from ctypes import cdll, byref, create_string_buffer
 
 
@@ -64,8 +64,7 @@ class Authenticate(Controller):
                 self.pin_var.set(self.pin)
 
         elif entry == 'Enter':
-            employee = Database.Employee(id=self.user_dict[self.user_listbox.get(ACTIVE)])
-            employee.load()
+            employee = Employee(id=self.user_dict[self.user_listbox.get(ACTIVE)])
             pin_hash = hashlib.sha256(self.pin.encode("utf-8")).hexdigest()
             if employee.pin == pin_hash:
                 UserMenu(employee)
@@ -77,7 +76,7 @@ class Authenticate(Controller):
             self.pin_var.set(self.pin)
 
     def build_user_list(self):
-        emp = Database.Employee()
+        emp = Employee()
         employees = emp.select_query()
         for employee in employees:
             emp.load(employee)
@@ -94,7 +93,7 @@ class Authenticate(Controller):
 class UserMenu(Controller):
 
     def __init__(self, employee):
-        employee = employee
+        self.employee = employee
         Controller.frame.destroy()
         Controller.frame = Frame(Controller.master)
         Controller.frame.grid()
@@ -104,19 +103,26 @@ class UserMenu(Controller):
                           text="Clock In",
                           height=4,
                           width=25,
-                          command=lambda x: Database.TimeEntries.clock_in(employee.id))
+                          # TODO: Change this to a local method
+                          command=lambda x: TimeEntries.clock_in(employee.id))
         clock_out = Button(clock_frame,
                            text="Clock Out",
                            height=4,
                            width=25,
-                           command=lambda x: Database.TimeEntries.clock_out(employee.id))
+                           # TODO: Change this to a local method
+                           command=lambda x: TimeEntries.clock_out(employee.id))
         clock_in.grid(row=0, padx=10, pady=5)
         clock_out.grid(row=1, padx=10, pady=5)
 
-    # def clock_in(self):
-    #     # Check last entry
-    #         #if there is not an open entry;
-    #             # post time entry
+    def clock_in(self):
+    #   Check last entry
+        db = TimeEntries(employee_id=self.employee, entry_date=datetime.date.today(), clock_out="NULL")
+        open_entry = db.select_query()
+    #       if there is not an open entry;
+        if len(open_entry) == 0:
+    #       post time entry
+            db.clock_in = datetime.datetime.today()
+            db.insert()
 
 
 # change process name from just python to TimeClock so we can use a bash script to make sure it is still alive
