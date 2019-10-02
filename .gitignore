@@ -17,3 +17,6 @@ venv.bak/
 
 # Log files
 *.log
+
+# Config files
+*.cfg
