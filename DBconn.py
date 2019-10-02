@@ -3,6 +3,7 @@
 import MySQLdb
 import sqlite3
 import os
+import configparser
 
 class DBConn:
     """
@@ -13,14 +14,27 @@ class DBConn:
     """
 
     def __init__(self, db_type):
-        if type == 'mysql':
-            self.conn = MySQLdb.Connection(
-                host=os.environ['TIMECLOCK_DB_HOST'],
-                user=os.environ['TIMECLOCK_DB_USER'],
-                passwd=os.environ['TIMECLOCK_DB_PWD'],
-                port=3306,
-                db=os.environ['TIMECLOCK_DB_NAME'])
-        elif type == 'sqlite':
+        if db_type == 'mysql':
+            if os.path.exists('config.ini'):
+                config = configparser.ConfigParser()
+                config.read('config.ini')
+                if config['SETUP']['LOCAL_CREDENTIALS'] == 'True':
+                    host = config['CREDENTIALS']['HOST']
+                    user = config['CREDENTIALS']['USER']
+                    passwd = config['CREDENTIALS']['PASS']
+                    db = config['CREDENTIALS']['DB']
+                else:
+                    host = os.environ['TIMECLOCK_DB_HOST']
+                    user = os.environ['TIMECLOCK_DB_USER']
+                    passwd = os.environ['TIMECLOCK_DB_PWD']
+                    db = os.environ['TIMECLOCK_DB_NAME']
+                self.conn = MySQLdb.Connection(
+                    host=host,
+                    user=user,
+                    passwd=passwd,
+                    port=3306,
+                    db=db)
+        elif db_type == 'sqlite':
             self.conn = sqlite3.connect('timeclock.db')
 
     def __enter__(self):
