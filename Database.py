@@ -2,6 +2,7 @@
 import datetime
 from DBconn import DBConn
 
+
 class Table:
 
     primary_key = "id"
@@ -38,7 +39,6 @@ class Table:
     def delete(self):
         # TODO: Make this primary key, not id, run through quote check
         self.commit_to_db("""DELETE FROM {} WHERE id = {}""".format(self.table_name, self.id))
-
 
     def select_query_format(self, order_by=None, how="ASC"):
         param_dict = self.build_param_dict()
@@ -140,7 +140,7 @@ class Table:
 
     @staticmethod
     def aggregate_rows(results):
-        rows= []
+        rows = []
         for i in range(0, results.num_rows()):
             temp = results.fetch_row()
             rows.append(temp[0])
