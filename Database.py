@@ -7,8 +7,8 @@ class Table:
 
     primary_key = "id"
 
-    def __init__(self, db_type):
-        self.db_type = db_type
+    def __init__(self):
+        self.db_type = 'mysql'
 
     def load(self, record=None):
         if not record:
@@ -119,7 +119,7 @@ class Table:
     def build_param_dict(self):
         param_dict = {}
         for key in self.__dict__.keys():
-            if self.__dict__[key] != "" and self.__dict__[key] != None:
+            if self.__dict__[key] != "" and self.__dict__[key]:
                 param_dict[key] = self.__dict__[key]
         return param_dict
 

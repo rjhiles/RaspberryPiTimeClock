@@ -5,6 +5,7 @@ import sqlite3
 import os
 import configparser
 
+
 class DBConn:
     """
     Databse connection for timeclock with context manager.
@@ -13,7 +14,7 @@ class DBConn:
                     conn.commit()
     """
 
-    def __init__(self, db_type):
+    def __init__(self, db_type='mysql'):
         if db_type == 'mysql':
             if os.path.exists('config.ini'):
                 config = configparser.ConfigParser()
@@ -28,14 +29,19 @@ class DBConn:
                     user = os.environ['TIMECLOCK_DB_USER']
                     passwd = os.environ['TIMECLOCK_DB_PWD']
                     db = os.environ['TIMECLOCK_DB_NAME']
-                self.conn = MySQLdb.Connection(
-                    host=host,
-                    user=user,
-                    passwd=passwd,
-                    port=3306,
-                    db=db)
+            else:
+                host = os.environ['TIMECLOCK_DB_HOST']
+                user = os.environ['TIMECLOCK_DB_USER']
+                passwd = os.environ['TIMECLOCK_DB_PWD']
+                db = os.environ['TIMECLOCK_DB_NAME']
+            self.conn = MySQLdb.Connection(
+                host=host,
+                user=user,
+                passwd=passwd,
+                port=3306,
+                db=db)
         elif db_type == 'sqlite':
-            self.conn = sqlite3.connect('timeclock.db')
+            self.conn = sqlite3.connect('TimeClock.db')
 
     def __enter__(self):
         return self.conn
