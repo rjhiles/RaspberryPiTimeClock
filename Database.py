@@ -4,8 +4,10 @@ from DBconn import DBConn
 
 class Table:
 
+    primary_key = "id"
+
     def load(self, record=None):
-        if record is None:
+        if not record:
             result = self.select_query()
             result = result[0]
         else:
@@ -13,7 +15,10 @@ class Table:
         for number, key in enumerate(self.__dict__.keys()):
             item = result[number]
             if isinstance(item, str):
-                assign = "self.{} = \'{}\'".format(key, item)
+                if item.replace(" ", "") == "":
+                    assign = "self.{} = None".format(key)
+                else:
+                    assign = "self.{} = \'\'\'{}\'\'\'".format(key, item)
             elif isinstance(item, datetime.datetime):
                 assign = "self.{} = datetime.datetime.strptime(\'{}\', \'%Y-%m-%d %H:%M:%S\')".format(key, item)
             elif isinstance(item, datetime.date):
@@ -30,10 +35,14 @@ class Table:
     def insert(self):
         self.commit_to_db(self.insert_query_format())
 
-    # TODO: Delete method
+    def delete(self):
+        # TODO: Make this primary key, not id, run through quote check
+        self.commit_to_db("""DELETE FROM {} WHERE id = {}""".format(self.table_name, self.id))
 
-    def select_query_format(self):
+
+    def select_query_format(self, order_by=None, how="ASC"):
         param_dict = self.build_param_dict()
+        # print(param_dict)
         if len(param_dict) > 0:
             filters = ""
             for key in param_dict.keys():
@@ -46,20 +55,27 @@ class Table:
                     q_filter = "{} = {} AND ".format(key, self.quote_check(value))
                 filters = filters + q_filter
             filters = filters[0:len(filters) - 4]
+            if order_by:
+                filters = "{} ORDER BY {} {}".format(filters, order_by, how)
             query_string = """SELECT * FROM {} WHERE {}""".format(self.table_name, filters)
         else:
-            query_string = """SELECT * FROM {} LIMIT 100""".format(self.table_name)
+            if order_by:
+                table_name = "{} ORDER BY {} {}".format(self.table_name, order_by, how)
+            else:
+                table_name = self.table_name
+            query_string = """SELECT * FROM {}""".format(table_name)
         return query_string
 
     def update_query_format(self):
         param_dict = self.build_param_dict()
         values = ""
         for key in param_dict.keys():
-            if key != "id":
+            if key != self.primary_key:
                 value = self.quote_check(param_dict[key])
                 values += " {} = {},".format(key, value)
         values = values[0:len(values) - 1]
-        return "UPDATE {} SET{} WHERE ID = {}".format(self.table_name, values, param_dict['id'])
+        return "UPDATE {} SET {} WHERE {} = {}".format(self.table_name, values,
+                                                       self.primary_key, self.quote_check(param_dict[self.primary_key]))
 
     def insert_query_format(self):
         """
@@ -79,9 +95,15 @@ class Table:
 
         return """INSERT INTO {} ({}) VALUES ({})""".format(self.table_name, fields, values)
 
-    def select_query(self):
+    def select_query(self, order_by=None, how="ASC", limit=None):
         with DBConn() as conn:
-            conn.query(self.select_query_format())
+            if not order_by:
+                query = self.select_query_format()
+            else:
+                query= self.select_query_format(order_by=order_by, how=how)
+            if limit:
+                query = "{} LIMIT {}".format(query, limit)
+            conn.query(query)
             result = conn.store_result()
             rows = self.aggregate_rows(result)
         return rows
@@ -110,34 +132,32 @@ class Table:
             value = "'{}'".format(data)
         elif isinstance(data, datetime.datetime):
             value = "'{}'".format(data)
+        elif isinstance(data, datetime.timedelta):
+            value = "'{}'".format(data)
         else:
             value = "{}".format(data)
         return value
 
     @staticmethod
     def aggregate_rows(results):
-        rows = []
+        rows= []
         for i in range(0, results.num_rows()):
             temp = results.fetch_row()
             rows.append(temp[0])
         return rows
 
 
-
-    def __init__(self, start, end):
-        self.start = Table.quote_check(start)
-        self.end = Table.quote_check(end)
-
 class Employee(Table):
 
     table_name = "employee"
 
-    def __init__(self, id=None, first_name=None, last_name=None, preferred_name=None, pin=None):
+    def __init__(self, id=None, first_name=None, last_name=None, preferred_name=None, pin=None, is_active=None):
         self.id = id
         self.first_name = first_name
         self.last_name = last_name
         self.preferred_name = preferred_name
         self.pin = pin
+        self.is_active = is_active
         if self.id is not None:
             self.load()
 
@@ -167,6 +187,14 @@ class TimeEntries(Table):
             self.load()
 
 
+class Between:
+
+    def __init__(self, start, end):
+        self.start = Table.quote_check(start)
+        self.end = Table.quote_check(end)
+
+
 def between(start, end):
     r = Between(start, end)
     return r
+
