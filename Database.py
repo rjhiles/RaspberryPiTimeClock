@@ -166,26 +166,32 @@ class TimeEntries(Table):
 
     table_name = "time_entries"
 
-    def __init__(self,
-                 id=None,
+    def __init__(self, id=None,
                  employee_id=None,
                  entry_date=None,
                  clock_in=None,
                  clock_out=None,
                  total_time=None,
                  error_entry=None,
-                 updated=None):
+                 updated=None,
+                 updated_by=None,
+                 update_date=None):
         self.id = id
-        self.employee_id    = employee_id
-        self.entry_date     = entry_date
-        self.clock_in       = clock_in
-        self.clock_out      = clock_out
-        self.total_time     = total_time
-        self.error_entry    = error_entry
-        self.updated        = updated
+        self.employee_id = employee_id
+        self.entry_date = entry_date
+        self.clock_in = clock_in
+        self.clock_out = clock_out
+        self.total_time = total_time
+        self.error_entry = error_entry
+        self.updated = updated
+        self.updated_by = updated_by
+        self.update_date = update_date
         if self.id is not None:
             self.load()
 
+    def compute_total_time(self):
+        if self.clock_out and self.clock_in:
+            self.total_time = self.clock_out - self.clock_in
 
 class Between:
 
