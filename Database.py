@@ -7,6 +7,9 @@ class Table:
 
     primary_key = "id"
 
+    def __init__(self, db_type):
+        self.db_type = db_type
+
     def load(self, record=None):
         if not record:
             result = self.select_query()
@@ -100,7 +103,7 @@ class Table:
             if not order_by:
                 query = self.select_query_format()
             else:
-                query= self.select_query_format(order_by=order_by, how=how)
+                query = self.select_query_format(order_by=order_by, how=how)
             if limit:
                 query = "{} LIMIT {}".format(query, limit)
             conn.query(query)
@@ -108,9 +111,8 @@ class Table:
             rows = self.aggregate_rows(result)
         return rows
 
-    @staticmethod
-    def commit_to_db(query):
-        with DBConn() as conn:
+    def commit_to_db(self, query):
+        with DBConn(self.db_type) as conn:
             conn.query(query)
             conn.commit()
 
@@ -166,7 +168,8 @@ class TimeEntries(Table):
 
     table_name = "time_entries"
 
-    def __init__(self, id=None,
+    def __init__(self,
+                 id=None,
                  employee_id=None,
                  entry_date=None,
                  clock_in=None,
