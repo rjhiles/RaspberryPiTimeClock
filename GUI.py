@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 
+from os import name as osname
 from tkinter import *
 import logging
 import hashlib
@@ -126,11 +127,12 @@ class UserMenu(Controller):
 
 
 # change process name from just python to TimeClock so we can use a bash script to make sure it is still alive
-procname = "TimeClock"
-libc = cdll.LoadLibrary('libc.so.6')
-buff = create_string_buffer(len(procname) +1)
-buff.value = procname.encode('utf-8')
-libc.prctl(15, byref(buff), 0, 0, 0)
+if osname == "posix":
+    procname = "TimeClock"
+    libc = cdll.LoadLibrary('libc.so.6')
+    buff = create_string_buffer(len(procname) +1)
+    buff.value = procname.encode('utf-8')
+    libc.prctl(15, byref(buff), 0, 0, 0)
 
 LOG_FILENAME = "TimeClock.log"
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
