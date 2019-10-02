@@ -12,7 +12,7 @@ class DBConn:
                     conn.commit()
     """
 
-    def __init__(self, type):
+    def __init__(self, db_type):
         if type == 'mysql':
             self.conn = MySQLdb.Connection(
                 host=os.environ['TIMECLOCK_DB_HOST'],
