@@ -23,7 +23,6 @@ class DBConn:
         elif type == 'sqlite':
             self.conn = sqlite3.connect('timeclock.db')
 
-
     def __enter__(self):
         return self.conn
 
