@@ -6,6 +6,8 @@ import logging
 import hashlib
 from Database import *
 from ctypes import cdll, byref, create_string_buffer
+import time
+
 
 
 class Controller:
@@ -22,6 +24,8 @@ class Controller:
 class Authenticate(Controller):
 
     def __init__(self):
+        if Controller.frame:
+            Controller.frame.destroy()
         Controller.frame = Frame(Controller.master)
         Controller.frame.grid(row=0, column=0, padx=5, pady=20, sticky=NSEW)
         # Keypad Items
@@ -37,6 +41,23 @@ class Authenticate(Controller):
         self.user_dict = {}
         self.build_user_list()
         self.user_list_frame.grid(row=0, column=1, padx=5, pady=5)
+        # Clock
+        self.clock_frame = Frame(Controller.frame)
+        self.current_time = "{}:{}:{}".format(time.localtime().tm_hour, time.localtime().tm_min,time.localtime().tm_sec)
+        self.clock_face = Label(self.clock_frame, text=self.current_time)
+        self.clock_face.config(font=('TkDefaultFont', 35))
+        self.clock_face.grid(row=0, column=0)
+        self.clock_frame.grid(row=0, column=2, padx=5, pady=10, sticky=N)
+        self.tick()
+
+    def tick(self):
+        self.current_time = "{}:{}:{}".format(time.localtime().tm_hour, time.localtime().tm_min,
+                                              time.localtime().tm_sec)
+        self.clock_face.configure(text=self.current_time)
+        print(self.current_time)
+        self.clock_face.after(500, self.tick)
+
+
 
 
     def make_keypad(self):
@@ -68,6 +89,7 @@ class Authenticate(Controller):
             employee = Employee(id=self.user_dict[self.user_listbox.get(ACTIVE)])
             pin_hash = hashlib.sha256(self.pin.encode("utf-8")).hexdigest()
             if employee.pin == pin_hash:
+
                 UserMenu(employee)
             self.pin = ""
             self.pin_var.set(self.pin)
@@ -112,8 +134,10 @@ class UserMenu(Controller):
                            width=25,
                            # TODO: Change this to a local method
                            command=lambda x: TimeEntries.clock_out(employee.id))
+        exit = Button(clock_frame, text="Exit", height=4, width=25, command=Authenticate)
         clock_in.grid(row=0, padx=10, pady=5)
         clock_out.grid(row=1, padx=10, pady=5)
+        exit.grid(row=2, padx=10,pady=5)
 
     def clock_in(self):
     #   Check last entry
