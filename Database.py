@@ -11,11 +11,15 @@ class Table:
     def load(self, record=None):
         if not record:
             result = self.select_query()
+            print(result)
+            print(type(result))
             result = result[0]
         else:
             result = record
         for number, key in enumerate(self.__dict__.keys()):
-            item = result[number]
+            if key == 'db_type':
+                continue
+            item = result[number - 1]
             if isinstance(item, str):
                 if item.replace(" ", "") == "":
                     assign = "self.{} = None".format(key)
@@ -112,7 +116,7 @@ class Table:
                 c = conn.cursor()
                 c.execute(query)
                 rows = c.fetchall()
-        return rows
+            return rows
 
     def commit_to_db(self, query):
         with DBConn(self.db_type) as conn:
@@ -158,7 +162,8 @@ class Employee(Table):
 
     table_name = "employee"
 
-    def __init__(self, id=None, first_name=None, last_name=None, preferred_name=None, pin=None, is_active=None):
+    def __init__(self, db_type=None, id=None, first_name=None, last_name=None, preferred_name=None, pin=None, is_active=None):
+        self.db_type = db_type
         self.id = id
         self.first_name = first_name
         self.last_name = last_name
@@ -174,6 +179,7 @@ class TimeEntries(Table):
     table_name = "time_entries"
 
     def __init__(self,
+                 db_type=None,
                  id=None,
                  employee_id=None,
                  entry_date=None,
@@ -184,6 +190,7 @@ class TimeEntries(Table):
                  updated=None,
                  updated_by=None,
                  update_date=None):
+        self.db_type = db_type
         self.id = id
         self.employee_id = employee_id
         self.entry_date = entry_date
@@ -200,6 +207,7 @@ class TimeEntries(Table):
     def compute_total_time(self):
         if self.clock_out and self.clock_in:
             self.total_time = self.clock_out - self.clock_in
+
 
 class Between:
 
