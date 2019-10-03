@@ -6,9 +6,7 @@ from DBconn import DBConn
 class Table:
 
     primary_key = "id"
-
-    def __init__(self):
-        self.db_type = 'mysql'
+    # db_type = "mysql"
 
     def load(self, record=None):
         if not record:
@@ -99,16 +97,21 @@ class Table:
         return """INSERT INTO {} ({}) VALUES ({})""".format(self.table_name, fields, values)
 
     def select_query(self, order_by=None, how="ASC", limit=None):
-        with DBConn() as conn:
+        with DBConn(self.db_type) as conn:
             if not order_by:
                 query = self.select_query_format()
             else:
                 query = self.select_query_format(order_by=order_by, how=how)
             if limit:
                 query = "{} LIMIT {}".format(query, limit)
-            conn.query(query)
-            result = conn.store_result()
-            rows = self.aggregate_rows(result)
+            if self.db_type == 'mysql':
+                conn.query(query)
+                result = conn.store_result()
+                rows = self.aggregate_rows(result)
+            elif self.db_type == 'sqlite':
+                c = conn.cursor()
+                c.execute(query)
+                rows = c.fetchall()
         return rows
 
     def commit_to_db(self, query):
