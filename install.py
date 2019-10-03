@@ -16,7 +16,7 @@ def install():
     with DBConn('sqlite') as conn:
         # Make Tables
         create_tables(conn)
-        populate_emplyee_table(conn)
+        populate_employee_table(conn)
 
 def create_tables(conn):
     c = conn.cursor()
@@ -24,16 +24,19 @@ def create_tables(conn):
         c.execute(query)
     conn.commit()
 
-def populate_emplyee_table(sqlite_conn):
+def populate_employee_table(sqlite_conn):
+    with DBConn('sqlite') as conn:
+        c = conn.cursor()
+        c.execute("""DELETE FROM employee""")
+        conn.commit()
     with DBConn('mysql') as conn:
-        employees = Employee(is_active=True).select_query()
+        employees = Employee(db_type='mysql', is_active=True).select_query()
         for employee in employees:
             query = """INSERT INTO employee VALUES {} """.format(employee)
             print(query)
             c = sqlite_conn.cursor()
             c.execute(query)
         sqlite_conn.commit()
-
 
 if __name__ == "__main__":
     if not os.path.exists('.//TimeClock.db'):
