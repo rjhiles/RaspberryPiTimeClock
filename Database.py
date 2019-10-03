@@ -122,6 +122,8 @@ class Table:
     def build_param_dict(self):
         param_dict = {}
         for key in self.__dict__.keys():
+            if key == 'db_type':
+                continue
             if self.__dict__[key] != "" and self.__dict__[key]:
                 param_dict[key] = self.__dict__[key]
         return param_dict
