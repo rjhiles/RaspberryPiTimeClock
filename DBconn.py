@@ -8,13 +8,13 @@ import configparser
 
 class DBConn:
     """
-    Databse connection for timeclock with context manager.
+    Database connection for timeclock with context manager.
     USE:        with DBconn() as conn:
                     conn.query(your_query)
                     conn.commit()
     """
 
-    def __init__(self, db_type='mysql'):
+    def __init__(self, db_type):
         if db_type == 'mysql':
             if os.path.exists('config.ini'):
                 config = configparser.ConfigParser()
