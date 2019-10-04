@@ -1,7 +1,7 @@
 import os
-import sqlite3
 from DBconn import DBConn
-from Database import Employee
+from Utils import update_employee_table
+
 
 
 table_queries = [
@@ -13,30 +13,21 @@ table_queries = [
 
 
 def install():
-    with DBConn('sqlite') as conn:
-        # Make Tables
-        create_tables(conn)
-        populate_employee_table(conn)
+    create_tables()
+    update_employee_table()
 
-def create_tables(conn):
-    c = conn.cursor()
-    for query in table_queries:
-        c.execute(query)
-    conn.commit()
-
-def populate_employee_table(sqlite_conn):
+def create_tables():
     with DBConn('sqlite') as conn:
         c = conn.cursor()
-        c.execute("""DELETE FROM employee""")
-        conn.commit()
-    with DBConn('mysql') as conn:
-        employees = Employee(db_type='mysql', is_active=True).select_query()
-        for employee in employees:
-            query = """INSERT INTO employee VALUES {} """.format(employee)
-            print(query)
-            c = sqlite_conn.cursor()
+        for query in table_queries:
             c.execute(query)
-        sqlite_conn.commit()
+        conn.commit()
+
+# TODO: add function for creating .ini file
+def make_ini_file():
+    pass
+    # TODO: check if ini file exists:
+        # TODO: create file collect entries
 
 if __name__ == "__main__":
     if not os.path.exists('.//TimeClock.db'):
