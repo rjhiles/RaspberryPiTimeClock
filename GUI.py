@@ -99,7 +99,7 @@ class Authenticate(Controller):
             self.pin_var.set(self.pin)
 
     def build_user_list(self):
-        emp = Employee()
+        emp = Employee(db_type='sqlite')
         employees = emp.select_query()
         for employee in employees:
             emp.load(employee)
