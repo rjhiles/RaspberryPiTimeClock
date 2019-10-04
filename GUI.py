@@ -7,6 +7,7 @@ import hashlib
 from Database import *
 from ctypes import cdll, byref, create_string_buffer
 import time
+import Utils
 
 
 
@@ -17,6 +18,7 @@ class Controller:
 
     def __init__(self, gui_root):
         Controller.master = gui_root
+        Utils.update_employee_table()
         Authenticate()
 
 
@@ -86,7 +88,7 @@ class Authenticate(Controller):
                 self.pin_var.set(self.pin)
 
         elif entry == 'Enter':
-            employee = Employee(id=self.user_dict[self.user_listbox.get(ACTIVE)])
+            employee = Employee(db_type='sqlite', id=self.user_dict[self.user_listbox.get(ACTIVE)])
             pin_hash = hashlib.sha256(self.pin.encode("utf-8")).hexdigest()
             if employee.pin == pin_hash:
 
@@ -140,12 +142,12 @@ class UserMenu(Controller):
         exit.grid(row=2, padx=10,pady=5)
 
     def clock_in(self):
-    #   Check last entry
+        # Check last entry
         db = TimeEntries(employee_id=self.employee, entry_date=datetime.date.today(), clock_out="NULL")
         open_entry = db.select_query()
-    #       if there is not an open entry;
+        # if there is not an open entry;
         if len(open_entry) == 0:
-    #       post time entry
+            # post time entry
             db.clock_in = datetime.datetime.today()
             db.insert()
 
