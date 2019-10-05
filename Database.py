@@ -120,8 +120,13 @@ class Table:
 
     def commit_to_db(self, query):
         with DBConn(self.db_type) as conn:
-            conn.query(query)
+            if self.db_type == 'mysql':
+                conn.query(query)
+            else:
+                c = conn.cursor()
+                c.execute(query)
             conn.commit()
+
 
     def build_param_dict(self):
         param_dict = {}
