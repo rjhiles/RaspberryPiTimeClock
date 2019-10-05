@@ -28,7 +28,7 @@ class Table:
             elif isinstance(item, datetime.datetime):
                 assign = "self.{} = datetime.datetime.strptime(\'{}\', \'%Y-%m-%d %H:%M:%S\')".format(key, item)
             elif isinstance(item, datetime.date):
-                assign = "self.{} = datetime.datetime.strptime(\'{}\', \'%Y-%m-%d\')".format(key, item)
+                assign = "self.{} = datetime.datetime.strptime(\'{}\', \'%Y-%m-%d\').date()".format(key, item)
             elif isinstance(item, datetime.timedelta):
                 assign = "self.{} = datetime.timedelta({})".format(key, item.total_seconds())
             else:
@@ -212,6 +212,26 @@ class TimeEntries(Table):
     def compute_total_time(self):
         if self.clock_out and self.clock_in:
             self.total_time = self.clock_out - self.clock_in
+
+    def to_datetime(self):
+        if self.entry_date:
+            self.entry_date = datetime.datetime.strptime(self.entry_date, '%Y-%m-%d').date()
+        if self.update_date:
+            self.update_date = datetime.datetime.strptime(self.update_date, '%Y-%m-%d').date()
+        if self.clock_in:
+            self.clock_in = datetime.datetime.strptime(self.clock_in, '%Y-%m-%d %H:%M:%S')
+        if self.clock_out:
+            self.clock_out = datetime.datetime.strptime(self.clock_out, '%Y-%m-%d %H:%M:%S')
+
+    def to_string(self):
+        if self.entry_date:
+            self.entry_date = self.entry_date.__str__()
+        if self.clock_in:
+            self.clock_in = self.clock_in.__str__()
+        if self.clock_out:
+            self.clock_out = self.clock_out.__str__()
+        if self.update_date:
+            self.update_date = self.update_date.__str__()
 
 
 class Between:
