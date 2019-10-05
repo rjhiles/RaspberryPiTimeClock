@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-from os import name as osname
+from os import name as osname, path
 from tkinter import *
 import logging
 import hashlib
@@ -58,9 +58,6 @@ class Authenticate(Controller):
         self.clock_face.configure(text=self.current_time)
         print(self.current_time)
         self.clock_face.after(500, self.tick)
-
-
-
 
     def make_keypad(self):
         self.pin_entry.config(font=("Calibri", 15))
@@ -140,16 +137,6 @@ class UserMenu(Controller):
         clock_in.grid(row=0, padx=10, pady=5)
         clock_out.grid(row=1, padx=10, pady=5)
         exit.grid(row=2, padx=10,pady=5)
-
-    def clock_in(self):
-        # Check last entry
-        db = TimeEntries(employee_id=self.employee, entry_date=datetime.date.today(), clock_out="NULL")
-        open_entry = db.select_query()
-        # if there is not an open entry;
-        if len(open_entry) == 0:
-            # post time entry
-            db.clock_in = datetime.datetime.today()
-            db.insert()
 
 
 # change process name from just python to TimeClock so we can use a bash script to make sure it is still alive
