@@ -127,7 +127,6 @@ class Table:
                 c.execute(query)
             conn.commit()
 
-
     def build_param_dict(self):
         param_dict = {}
         for key in self.__dict__.keys():
@@ -219,17 +218,17 @@ class TimeEntries(Table):
         if self.update_date:
             self.update_date = datetime.datetime.strptime(self.update_date, '%Y-%m-%d').date()
         if self.clock_in:
-            self.clock_in = datetime.datetime.strptime(self.clock_in, '%Y-%m-%d %H:%M:%S')
+            self.clock_in = datetime.datetime.strptime(self.clock_in.split(".")[0], '%Y-%m-%d %H:%M:%S')
         if self.clock_out:
-            self.clock_out = datetime.datetime.strptime(self.clock_out, '%Y-%m-%d %H:%M:%S')
+            self.clock_out = datetime.datetime.strptime(self.clock_out.split(".")[0], '%Y-%m-%d %H:%M:%S')
 
     def to_string(self):
         if self.entry_date:
             self.entry_date = self.entry_date.__str__()
         if self.clock_in:
-            self.clock_in = self.clock_in.__str__()
+            self.clock_in = self.clock_in.__str__().split(".")[0]
         if self.clock_out:
-            self.clock_out = self.clock_out.__str__()
+            self.clock_out = self.clock_out.__str__().split(".")[0]
         if self.update_date:
             self.update_date = self.update_date.__str__()
 
