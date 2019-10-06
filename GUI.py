@@ -2,13 +2,18 @@
 
 from os import name as osname, path
 from tkinter import *
+from tkinter import messagebox
 import logging
 import hashlib
 from Database import *
 from ctypes import cdll, byref, create_string_buffer
 import time
 import Utils
+import configparser
 
+if path.exists('config.ini'):
+    config = configparser.ConfigParser()
+    config.read("config.ini")
 
 
 class Controller:
@@ -20,7 +25,6 @@ class Controller:
         Controller.master = gui_root
         Utils.update_employee_table()
         Authenticate()
-
 
 
 class Authenticate(Controller):
@@ -56,7 +60,6 @@ class Authenticate(Controller):
         self.current_time = "{}:{}:{}".format(time.localtime().tm_hour, time.localtime().tm_min,
                                               time.localtime().tm_sec)
         self.clock_face.configure(text=self.current_time)
-        print(self.current_time)
         self.clock_face.after(500, self.tick)
 
     def make_keypad(self):
@@ -73,8 +76,8 @@ class Authenticate(Controller):
                 b = Button(self.keypad_frame,
                            text=key,
                            height=2,
-                           width= 6,
-                           command=lambda x=key: self.keypad_entries(x))
+                           width=6,
+                           command=lambda z=key: self.keypad_entries(z))
                 b.grid(row=y + 3, column=x)
                 b.config(font=("Calibri", 20))
 
@@ -126,17 +129,95 @@ class UserMenu(Controller):
                           height=4,
                           width=25,
                           # TODO: Change this to a local method
-                          command=lambda x: TimeEntries.clock_in(employee.id))
+                          command=self.clock_in)
         clock_out = Button(clock_frame,
                            text="Clock Out",
                            height=4,
                            width=25,
                            # TODO: Change this to a local method
-                           command=lambda x: TimeEntries.clock_out(employee.id))
+                           command=self.clock_out)
         exit = Button(clock_frame, text="Exit", height=4, width=25, command=Authenticate)
         clock_in.grid(row=0, padx=10, pady=5)
         clock_out.grid(row=1, padx=10, pady=5)
         exit.grid(row=2, padx=10,pady=5)
+
+    def clock_in(self):
+        # Check last entry
+        entry_search = TimeEntries(db_type='sqlite',
+                                   employee_id=self.employee.id,
+                                   entry_date=datetime.date.today(),
+                                   clock_out='NULL',
+                                   error_entry='NULL')
+        entry_search.to_string()
+        last_entry = entry_search.select_query()
+        if last_entry:
+            entry = TimeEntries(db_type='sqlite')
+            entry.load(record=last_entry[0])
+            entry.error_entry = 1
+            entry.update()
+            messagebox.showerror(title="ERROR", message=config['MESSAGES']['CLOCK_IN_AFTER_MISSED_CLOCK_OUT'])
+            # TODO: Send alert email
+
+        new_entry = TimeEntries(db_type='sqlite',
+                                employee_id=self.employee.id,
+                                entry_date=datetime.date.today(),
+                                clock_in=datetime.datetime.today())
+        new_entry.to_string()
+        new_entry.insert()
+        Utils.timed_messagebox("Success", "You are clocked in!")
+        Authenticate()
+
+    def clock_out(self):
+        # Check to see if there is an open time entry for this employee
+        entry_search = TimeEntries(db_type='sqlite',
+                                   employee_id=self.employee.id,
+                                   entry_date=datetime.date.today(),
+                                   clock_out="NULL",
+                                   error_entry="NULL")
+        entry_search.to_string()
+        last_entry = entry_search.select_query()
+        if len(last_entry) > 1:
+            # The employee missed a previous clock out and hasn't been corrected this is caught by clock_in error check
+            # Find the most recent time entry
+            entry = TimeEntries()
+            most_recent_open_entry = TimeEntries(db_type='sqlite')
+            most_recent_open_entry.load(record=last_entry[0])
+            most_recent_open_entry.to_datetime()
+            for i in range(1, len(last_entry)):
+                entry.load(record=last_entry[i])
+                entry.to_datetime()
+                if entry.clock_in > most_recent_open_entry.clock_in:
+                    most_recent_open_entry.to_string()
+                    most_recent_open_entry.error_entry = 1
+                    most_recent_open_entry.db_type = 'sqlite'
+                    most_recent_open_entry.update()
+                    most_recent_open_entry.load(record=last_entry[i])
+                    most_recent_open_entry.to_datetime()
+            most_recent_open_entry.clock_out = datetime.datetime.today()
+            most_recent_open_entry.db_type = 'sqlite'
+            most_recent_open_entry.to_string()
+            most_recent_open_entry.update()
+
+        elif len(last_entry) == 1:
+            # All is as expected add clock out entry
+            entry = TimeEntries(db_type='sqlite', id=last_entry[0][0])
+            entry.to_datetime()
+            entry.clock_out = datetime.datetime.today()
+            entry.to_string()
+            entry.update()
+        elif len(last_entry) == 0:
+            # They missed a clock in
+            messagebox.showerror(title='Erorr', message=config['MESSAGES']['MISSED_CLOCK_IN'])
+            entry = TimeEntries(db_type='sqlite',
+                                employee_id=self.employee.id,
+                                entry_date=datetime.date.today(),
+                                clock_out=datetime.datetime.today(),
+                                error_entry=1,
+                                )
+            entry.to_string()
+            entry.insert()
+        Utils.timed_messagebox('Success', 'You have successfully clocked out!')
+        Authenticate()
 
 
 # change process name from just python to TimeClock so we can use a bash script to make sure it is still alive
