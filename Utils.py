@@ -5,7 +5,7 @@ from Database import *
 import logging
 import MySQLdb
 import datetime
-from tkinter import messagebox
+from tkinter import Toplevel, Message
 import configparser
 import os
 
@@ -16,7 +16,6 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 if os.path.exists('config.ini'):
-    print('yes')
     config = configparser.ConfigParser()
     config.read("config.ini")
 
@@ -36,31 +35,11 @@ def update_employee_table():
     except MySQLdb.Error as e:
         logger.exception("Caught exception connecting to database\n Error: {}".format(e))
 
-# Clock Functions
 
-
-def clock_in(employee_id):
-    # Check last entry
-    last_entry = TimeEntries(db_type='sqlite',
-                             employee_id=employee_id,
-                             entry_date=datetime.date.today(),
-                             clock_out='NULL')
-    last_entry.to_string()
-    last_entry.select_query()
-    if last_entry:
-        # Notify user pof error
-        messagebox.showerror(title="ERROR", message=config['MESSAGES']['CLOCK_IN_AFTER_MISSED_CLOCK_OUT'])
-        # Send alert email
-        pass
-    new_entry = TimeEntries(db_type='sqlite',
-                            employee_id=employee_id,
-                            entry_date=datetime.date.today(),
-                            clock_in=datetime.datetime.today())
-    new_entry.to_string()
-    new_entry.insert()
-
-def clock_out(employee_id):
-    # Check to see if there is an open time entry for this employee
-        # If no:
-            # Notify employee
-            # Send alert email
+def timed_messagebox(title, message):
+    messagebox = Toplevel()
+    messagebox.title(title)
+    m = Message(messagebox, text=message, padx=100, pady=100)
+    m.config(font=('TkDefaultFont',20))
+    m.pack()
+    messagebox.after(3000, messagebox.destroy)
