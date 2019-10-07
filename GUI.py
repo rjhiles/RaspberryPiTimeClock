@@ -80,7 +80,7 @@ class Authenticate(Controller):
                 b = Button(self.keypad_frame,
                            text=key,
                            height=2,
-                           width=6,
+                           width=4,
                            command=lambda z=key: self.keypad_entries(z))
                 b.grid(row=y + 3, column=x)
                 b.config(font=("Calibri", 20))
