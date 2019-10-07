@@ -16,6 +16,8 @@ def transport_completed_entries():
             mysql_entry = TimeEntries(db_type='mysql')
             mysql_entry.load(record=record)
             mysql_entry.to_datetime()
+            if entry_date != datetime.date.today():
+                mysql_entry.error_entry = 1
             mysql_entry.id = None
             if mysql_entry.clock_in and mysql_entry.clock_out:
                 mysql_entry.compute_total_time()
