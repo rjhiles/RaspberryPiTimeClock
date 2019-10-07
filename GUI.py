@@ -10,6 +10,8 @@ from ctypes import cdll, byref, create_string_buffer
 import time
 import Utils
 import configparser
+import threading
+import Daemon
 
 if path.exists('config.ini'):
     config = configparser.ConfigParser()
@@ -24,6 +26,8 @@ class Controller:
     def __init__(self, gui_root):
         Controller.master = gui_root
         Utils.update_employee_table()
+        thread = threading.Thread(target=Daemon.main_loop, daemon=True)
+        thread.start()
         Authenticate()
 
 
