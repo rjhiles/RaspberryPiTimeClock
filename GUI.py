@@ -55,7 +55,7 @@ class Authenticate(Controller):
         self.clock_frame = Frame(Controller.frame)
         self.current_time = "{}:{}:{}".format(time.localtime().tm_hour, time.localtime().tm_min,time.localtime().tm_sec)
         self.clock_face = Label(self.clock_frame, text=self.current_time)
-        self.clock_face.config(font=('TkDefaultFont', 35))
+        self.clock_face.config(font=('TkDefaultFont', 30))
         self.clock_face.grid(row=0, column=0)
         self.clock_frame.grid(row=0, column=2, padx=5, pady=10, sticky=N)
         self.tick()
