@@ -47,7 +47,7 @@ class Authenticate(Controller):
         self.keypad_frame.grid(row=0, column=0, padx=5, pady=5, sticky=NSEW)
         # User Menu Items
         self.user_list_frame = Frame(Controller.frame)
-        self.user_listbox = Listbox(self.user_list_frame, font=("Calibri", 20)
+        self.user_listbox = Listbox(self.user_list_frame, font=("Calibri", 20))
         self.user_dict = {}
         self.build_user_list()
         self.user_list_frame.grid(row=0, column=1, padx=5, pady=5)
