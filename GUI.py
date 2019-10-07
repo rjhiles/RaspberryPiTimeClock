@@ -141,6 +141,9 @@ class UserMenu(Controller):
                            # TODO: Change this to a local method
                            command=self.clock_out)
         exit = Button(clock_frame, text="Exit", height=4, width=25, command=Authenticate)
+        clock_in.config(font=('TkDefaultFont', 15))
+        clock_out.config(font=('TkDefaultFont', 15))
+        exit.config(font=('TkDefaultFont', 15))
         clock_in.grid(row=0, padx=10, pady=5)
         clock_out.grid(row=1, padx=10, pady=5)
         exit.grid(row=2, padx=10,pady=5)
