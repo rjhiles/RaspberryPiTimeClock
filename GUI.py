@@ -92,7 +92,8 @@ class Authenticate(Controller):
                 self.pin_var.set(self.pin)
 
         elif entry == 'Enter':
-            employee = Employee(db_type='sqlite', id=self.user_dict[self.user_listbox.get(ACTIVE)])
+            employee = Employee(id=self.user_dict[self.user_listbox.get(ACTIVE)])
+            employee.load('sqlite')
             pin_hash = hashlib.sha256(self.pin.encode("utf-8")).hexdigest()
             if employee.pin == pin_hash:
 
@@ -105,10 +106,10 @@ class Authenticate(Controller):
             self.pin_var.set(self.pin)
 
     def build_user_list(self):
-        emp = Employee(db_type='sqlite')
-        employees = emp.select_query()
+        emp = Employee()
+        employees = emp.select_query('sqlite')
         for employee in employees:
-            emp.load(employee)
+            emp.load('sqlite', record=employee)
             emp_name = "{} {}".format(emp.preferred_name, emp.last_name)
             self.user_dict[emp_name] = emp.id
             self.user_listbox.insert(END, emp_name)
@@ -152,91 +153,83 @@ class UserMenu(Controller):
 
     def clock_in(self):
         # Check last entry
-        entry_search = TimeEntries(db_type='sqlite',
-                                   employee_id=self.employee.id,
+        entry_search = TimeEntries(employee_id=self.employee.id,
                                    entry_date=datetime.date.today(),
                                    clock_out='NULL',
                                    error_entry='NULL')
         entry_search.to_string()
-        last_entry = entry_search.select_query()
+        last_entry = entry_search.select_query('sqlite')
         if last_entry:
-            entry = TimeEntries(db_type='sqlite')
-            entry.load(record=last_entry[0])
+            entry = TimeEntries()
+            entry.load('sqlite', record=last_entry[0])
             entry.error_entry = 1
-            entry.update()
+            entry.update('sqlite')
             messagebox.showerror(title="ERROR", message=config['MESSAGES']['CLOCK_IN_AFTER_MISSED_CLOCK_OUT'])
             # TODO: Send alert email
 
-        new_entry = TimeEntries(db_type='sqlite',
-                                employee_id=self.employee.id,
+        new_entry = TimeEntries(employee_id=self.employee.id,
                                 entry_date=datetime.date.today(),
                                 clock_in=datetime.datetime.today())
         new_entry.to_string()
-        new_entry.insert()
+        new_entry.insert('sqlite')
         Utils.timed_messagebox("Success", "You are clocked in!")
         Authenticate()
 
     def clock_out(self):
         # Check to see if there is an open time entry for this employee
-        entry_search = TimeEntries(db_type='sqlite',
-                                   employee_id=self.employee.id,
+        entry_search = TimeEntries(employee_id=self.employee.id,
                                    entry_date=datetime.date.today(),
                                    clock_out="NULL",
                                    error_entry="NULL")
         entry_search.to_string()
-        last_entry = entry_search.select_query()
+        last_entry = entry_search.select_query('sqlite')
         if len(last_entry) > 1:
             # The employee missed a previous clock out and hasn't been corrected this is caught by clock_in error check
             # Find the most recent time entry
             entry = TimeEntries()
-            most_recent_open_entry = TimeEntries(db_type='sqlite')
-            most_recent_open_entry.load(record=last_entry[0])
+            most_recent_open_entry = TimeEntries()
+            most_recent_open_entry.load('sqlite', record=last_entry[0])
             most_recent_open_entry.to_datetime()
             for i in range(1, len(last_entry)):
-                entry.load(record=last_entry[i])
+                entry.load('sqlite', record=last_entry[i])
                 entry.to_datetime()
                 if entry.clock_in > most_recent_open_entry.clock_in:
                     most_recent_open_entry.to_string()
                     most_recent_open_entry.error_entry = 1
-                    most_recent_open_entry.db_type = 'sqlite'
-                    most_recent_open_entry.update()
+                    most_recent_open_entry.update('sqlite')
                     most_recent_open_entry.load(record=last_entry[i])
                     most_recent_open_entry.to_datetime()
             most_recent_open_entry.clock_out = datetime.datetime.today()
-            most_recent_open_entry.db_type = 'sqlite'
             most_recent_open_entry.to_string()
-            most_recent_open_entry.update()
+            most_recent_open_entry.update('sqlite')
 
         elif len(last_entry) == 1:
             # All is as expected add clock out entry
-            entry = TimeEntries(db_type='sqlite', id=last_entry[0][0])
+            entry = TimeEntries(id=last_entry[0]['id'])
             entry.to_datetime()
             entry.clock_out = datetime.datetime.today()
             entry.to_string()
-            entry.update()
+            entry.update('sqlite')
         elif len(last_entry) == 0:
             # They missed a clock in
             messagebox.showerror(title='Erorr', message=config['MESSAGES']['MISSED_CLOCK_IN'])
-            entry = TimeEntries(db_type='sqlite',
-                                employee_id=self.employee.id,
+            entry = TimeEntries(employee_id=self.employee.id,
                                 entry_date=datetime.date.today(),
                                 clock_out=datetime.datetime.today(),
                                 error_entry=1,
                                 )
             entry.to_string()
-            entry.insert()
+            entry.insert('sqlite')
         Utils.timed_messagebox('Success', 'You have successfully clocked out!')
         Authenticate()
 
     def check_user_notifications(self):
-        notification = Notify(employee_id=self.employee.id).select_query()
-        print(notification)
+        notification = Notify(employee_id=self.employee.id).select_query('sqlite')
         if notification:
             messagebox.showerror(title="ERROR", message=config['MESSAGES']['MISSED_CLOCK_OUT_PREVIOUS_DAY'])
             notification_entry = Notify()
-            notification_entry.load(record=notification[0])
-            print(notification_entry.__dict__)
-            notification_entry.delete()
+            notification_entry.load('sqlite', record=notification[0])
+            notification_entry.delete('sqlite')
 
 
 # change process name from just python to TimeClock so we can use a bash script to make sure it is still alive

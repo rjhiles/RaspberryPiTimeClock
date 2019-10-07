@@ -8,42 +8,58 @@ class Table:
     primary_key = "id"
     # db_type = "mysql"
 
-    def load(self, record=None):
+    def load(self, db_type, record=None):
         if not record:
-            result = self.select_query()
-            print(result)
-            print(type(result))
-            result = result[0]
-        else:
-            result = record
-        for number, key in enumerate(self.__dict__.keys()):
-            if key == 'db_type':
-                continue
-            item = result[number - 1]
-            if isinstance(item, str):
-                if item.replace(" ", "") == "":
-                    assign = "self.{} = None".format(key)
-                else:
-                    assign = "self.{} = \'\'\'{}\'\'\'".format(key, item)
-            elif isinstance(item, datetime.datetime):
-                assign = "self.{} = datetime.datetime.strptime(\'{}\', \'%Y-%m-%d %H:%M:%S\')".format(key, item)
-            elif isinstance(item, datetime.date):
-                assign = "self.{} = datetime.datetime.strptime(\'{}\', \'%Y-%m-%d\').date()".format(key, item)
-            elif isinstance(item, datetime.timedelta):
-                assign = "self.{} = datetime.timedelta({})".format(key, item.total_seconds())
-            else:
-                assign = "self.{} = {}".format(key, item)
-            exec(assign)
+            result = self.select_query(db_type)
+            record = result[0]
+        for key in record.keys():
+            self.__setattr__(key, record[key])
+        # for number, key in enumerate(self.__dict__.keys()):
+        #     item = result[number]
+        #     if isinstance(item, str):
+        #         if item.replace(" ", "") == "":
+        #             assign = "self.{} = None".format(key)
+        #         else:
+        #             assign = "self.{} = \'\'\'{}\'\'\'".format(key, item)
+        #     elif isinstance(item, datetime.datetime):
+        #         assign = "self.{} = datetime.datetime.strptime(\'{}\', \'%Y-%m-%d %H:%M:%S\')".format(key, item)
+        #     elif isinstance(item, datetime.date):
+        #         assign = "self.{} = datetime.datetime.strptime(\'{}\', \'%Y-%m-%d\').date()".format(key, item)
+        #     elif isinstance(item, datetime.timedelta):
+        #         assign = "self.{} = datetime.timedelta({})".format(key, item.total_seconds())
+        #     else:
+        #         assign = "self.{} = {}".format(key, item)
+        #     exec(assign)
 
-    def update(self):
-        self.commit_to_db(self.update_query_format())
+    def update(self, db_type):
+        self.commit_to_db(db_type, self.update_query_format())
 
-    def insert(self):
-        self.commit_to_db(self.insert_query_format())
+    def insert(self, db_type):
+        self.commit_to_db(db_type, self.insert_query_format())
 
-    def delete(self):
+    def delete(self, db_type):
         # TODO: Make this primary key, not id, run through quote check
-        self.commit_to_db("""DELETE FROM {} WHERE id = {}""".format(self.table_name, self.id))
+        self.commit_to_db(db_type, """DELETE FROM {} WHERE id = {}""".format(self.table_name, self.id))
+
+    def select_query(self, db_type, order_by=None, how="ASC", limit=None):
+        with DBConn(db_type) as conn:
+            if not order_by:
+                query = self.select_query_format()
+            else:
+                query = self.select_query_format(order_by=order_by, how=how)
+            if limit:
+                query = "{} LIMIT {}".format(query, limit)
+            c = conn.cursor()
+            c.execute(query)
+            rows = c.fetchall()
+            return rows
+
+    @staticmethod
+    def commit_to_db(db_type, query):
+        with DBConn(db_type) as conn:
+            c = conn.cursor()
+            c.execute(query)
+            conn.commit()
 
     def select_query_format(self, order_by=None, how="ASC"):
         param_dict = self.build_param_dict()
@@ -100,38 +116,9 @@ class Table:
 
         return """INSERT INTO {} ({}) VALUES ({})""".format(self.table_name, fields, values)
 
-    def select_query(self, order_by=None, how="ASC", limit=None):
-        with DBConn(self.db_type) as conn:
-            if not order_by:
-                query = self.select_query_format()
-            else:
-                query = self.select_query_format(order_by=order_by, how=how)
-            if limit:
-                query = "{} LIMIT {}".format(query, limit)
-            if self.db_type == 'mysql':
-                conn.query(query)
-                result = conn.store_result()
-                rows = self.aggregate_rows(result)
-            elif self.db_type == 'sqlite':
-                c = conn.cursor()
-                c.execute(query)
-                rows = c.fetchall()
-            return rows
-
-    def commit_to_db(self, query):
-        with DBConn(self.db_type) as conn:
-            if self.db_type == 'mysql':
-                conn.query(query)
-            else:
-                c = conn.cursor()
-                c.execute(query)
-            conn.commit()
-
     def build_param_dict(self):
         param_dict = {}
         for key in self.__dict__.keys():
-            if key == 'db_type':
-                continue
             if self.__dict__[key] != "" and self.__dict__[key]:
                 param_dict[key] = self.__dict__[key]
         return param_dict
@@ -153,29 +140,20 @@ class Table:
             value = "{}".format(data)
         return value
 
-    @staticmethod
-    def aggregate_rows(results):
-        rows = []
-        for i in range(0, results.num_rows()):
-            temp = results.fetch_row()
-            rows.append(temp[0])
-        return rows
-
 
 class Employee(Table):
 
     table_name = "employee"
 
-    def __init__(self, db_type=None, id=None, first_name=None, last_name=None, preferred_name=None, pin=None, is_active=None):
-        self.db_type = db_type
+    def __init__(self, id=None, first_name=None, last_name=None, preferred_name=None, pin=None, is_active=None):
         self.id = id
         self.first_name = first_name
         self.last_name = last_name
         self.preferred_name = preferred_name
         self.pin = pin
         self.is_active = is_active
-        if self.id is not None:
-            self.load()
+
+
 
 
 class TimeEntries(Table):
@@ -183,7 +161,6 @@ class TimeEntries(Table):
     table_name = "time_entries"
 
     def __init__(self,
-                 db_type=None,
                  id=None,
                  employee_id=None,
                  entry_date=None,
@@ -194,7 +171,6 @@ class TimeEntries(Table):
                  updated=None,
                  updated_by=None,
                  update_date=None):
-        self.db_type = db_type
         self.id = id
         self.employee_id = employee_id
         self.entry_date = entry_date
@@ -205,8 +181,6 @@ class TimeEntries(Table):
         self.updated = updated
         self.updated_by = updated_by
         self.update_date = update_date
-        if self.id is not None:
-            self.load()
 
     def compute_total_time(self):
         if self.clock_out and self.clock_in:
@@ -237,8 +211,7 @@ class Notify(Table):
 
     table_name = "notify"
 
-    def __init__(self, db_type = 'sqlite', id=None, employee_id=None, missed_entry_date=None):
-        self.db_type = db_type
+    def __init__(self, id=None, employee_id=None, missed_entry_date=None):
         self.id = id
         self.employee_id = employee_id
         self.missed_entry_date = missed_entry_date

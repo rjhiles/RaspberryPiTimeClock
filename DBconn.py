@@ -1,6 +1,7 @@
 # /usr/bin/python3
 
 import MySQLdb
+import MySQLdb.cursors
 import sqlite3
 import os
 import configparser
@@ -39,12 +40,21 @@ class DBConn:
                 user=user,
                 passwd=passwd,
                 port=3306,
-                db=db)
+                db=db,
+                cursorclass=MySQLdb.cursors.DictCursor)
         elif db_type == 'sqlite':
             self.conn = sqlite3.connect('TimeClock.db')
+            self.conn.row_factory = self.dict_factory
 
     def __enter__(self):
         return self.conn
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.conn.close()
+
+    @staticmethod
+    def dict_factory(cursor, row):
+        d = {}
+        for idx, col in enumerate(cursor.description):
+            d[col[0]] = row[idx]
+        return d
