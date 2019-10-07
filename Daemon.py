@@ -17,6 +17,8 @@ def transport_completed_entries():
             mysql_entry.load(record=record)
             mysql_entry.to_datetime()
             mysql_entry.id = None
+            if mysql_entry.clock_in and mysql_entry.clock_out:
+                mysql_entry.compute_total_time()
             try:
                 mysql_entry.insert()
             except Exception as e:
