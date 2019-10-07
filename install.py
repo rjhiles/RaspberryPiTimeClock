@@ -9,6 +9,8 @@ table_queries = [
     """CREATE TABLE employee(id INTEGER PRIMARY KEY, first_name TEXT, last_name TEXT, preferred_name TEXT, pin TEXT, is_active NUMERIC)""",
     # Time Entries Table
     """CREATE TABLE time_entries(id INTEGER PRIMARY KEY, employee_id INT, entry_date TEXT, clock_in TEXT, clock_out TEXT, total_time TEXT, error_entry NUMERIC, updated NUMERIC, updated_by INT, update_date TEXT)""",
+    # Overnight error notifications
+    """CREATE TABLE notify(id INTEGER PRIMARY KEY, employee_id INT, missed_entry_date TEXT)""",
 ]
 
 
@@ -33,7 +35,7 @@ def make_ini_file():
             If Yes:
                 Notify email for employee clock entry errors   
             Missed clock out error message - "What message do you want to display to users when attempt to clock in and they forgot to clock out"
-            Missed clock out after employee left 
+            Missed clock out after employee left : MISSED_CLOCK_OUT_PREVIOUS_DAY
             Missed Clock in when employee is clocking out for lunch or for the day
                 
         """

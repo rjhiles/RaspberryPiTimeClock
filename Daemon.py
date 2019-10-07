@@ -18,6 +18,7 @@ def transport_completed_entries():
             mysql_entry.to_datetime()
             if entry_date != datetime.date.today():
                 mysql_entry.error_entry = 1
+                set_employee_notification(mysql_entry.employee_id, mysql_entry.entry_date)
             mysql_entry.id = None
             if mysql_entry.clock_in and mysql_entry.clock_out:
                 mysql_entry.compute_total_time()
@@ -30,6 +31,11 @@ def transport_completed_entries():
                 entry.db_type = 'sqlite'
                 entry.delete()
 
+
+def set_employee_notification(employee_id, missed_entry_date):
+    notification = Notify(employee_id=employee_id, missed_entry_date=missed_entry_date)
+    notification.to_string()
+    notification.insert()
 
 def main_loop():
     while True:

@@ -119,6 +119,7 @@ class Authenticate(Controller):
         scroll.grid(row=0, column=1,sticky=NS)
 
 
+
 class UserMenu(Controller):
 
     def __init__(self, employee):
@@ -147,6 +148,7 @@ class UserMenu(Controller):
         clock_in.grid(row=0, padx=10, pady=5)
         clock_out.grid(row=1, padx=10, pady=5)
         exit.grid(row=2, padx=10,pady=5)
+        self.check_user_notifications()
 
     def clock_in(self):
         # Check last entry
@@ -225,6 +227,16 @@ class UserMenu(Controller):
             entry.insert()
         Utils.timed_messagebox('Success', 'You have successfully clocked out!')
         Authenticate()
+
+    def check_user_notifications(self):
+        notification = Notify(employee_id=self.employee.id).select_query()
+        print(notification)
+        if notification:
+            messagebox.showerror(title="ERROR", message=config['MESSAGES']['MISSED_CLOCK_OUT_PREVIOUS_DAY'])
+            notification_entry = Notify()
+            notification_entry.load(record=notification[0])
+            print(notification_entry.__dict__)
+            notification_entry.delete()
 
 
 # change process name from just python to TimeClock so we can use a bash script to make sure it is still alive

@@ -233,6 +233,25 @@ class TimeEntries(Table):
             self.update_date = self.update_date.__str__()
 
 
+class Notify(Table):
+
+    table_name = "notify"
+
+    def __init__(self, db_type = 'sqlite', id=None, employee_id=None, missed_entry_date=None):
+        self.db_type = db_type
+        self.id = id
+        self.employee_id = employee_id
+        self.missed_entry_date = missed_entry_date
+
+    def to_datetime(self):
+        if self.missed_entry_date:
+            self.missed_entry_date = datetime.datetime.strptime(self.missed_entry_date, '%Y-%m-%d').date()
+
+    def to_string(self):
+        if self.missed_entry_date:
+            self.missed_entry_date = self.missed_entry_date.__str__()
+
+
 class Between:
 
     def __init__(self, start, end):
