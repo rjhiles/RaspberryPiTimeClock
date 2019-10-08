@@ -154,8 +154,6 @@ class Employee(Table):
         self.is_active = is_active
 
 
-
-
 class TimeEntries(Table):
 
     table_name = "time_entries"

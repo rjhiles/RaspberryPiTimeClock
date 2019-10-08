@@ -5,7 +5,6 @@ import logging
 from time import sleep
 import datetime
 
-
 def transport_completed_entries():
     time_entries = TimeEntries().select_query('sqlite')
     entry = TimeEntries()
@@ -35,6 +34,7 @@ def set_employee_notification(employee_id, missed_entry_date):
     notification = Notify(employee_id=employee_id, missed_entry_date=missed_entry_date)
     notification.to_string()
     notification.insert('sqlite')
+
 
 def main_loop():
     while True:

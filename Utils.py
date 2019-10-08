@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 
 from DBconn import DBConn
+import pandas as pd
 from Database import *
 import logging
 import MySQLdb
@@ -42,3 +43,33 @@ def timed_messagebox(title, message):
     m.config(font=('TkDefaultFont', 20))
     m.pack()
     messagebox.after(3000, messagebox.destroy)
+
+def calculate_hours_for_the_week(employee_id):
+    # Get mysql total time
+    time_entries = TimeEntries(employee_id=employee_id)
+    current_date = datetime.date.today().weekday()
+    if current_date == 0:
+        date_param = datetime.date.today()
+    else:
+        date_param = between(datetime.date.today() + datetime.timedelta(days=-current_date), datetime.date.today())
+    time_entries.entry_date = date_param
+    entries = time_entries.select_query('mysql')
+    df = pd.DataFrame.from_records(entries)
+    mysql_total_time = df['total_time'].sum().total_seconds()
+    mysql_total_hours, mysql_total_minutes = calculate_hours_and_minutes(mysql_total_time)
+    # Get sqlite total time
+    time_entries = TimeEntries(employee_id=employee_id, entry_date=date_param).select_query('sqlite')
+    if time_entries:
+        time_entry = TimeEntries().load('sqlite', record=time_entries[0])
+        if time_entry.clock_in:
+            time_entry.to_datetime()
+            sqlite_total_time = (datetime.datetime.today() - time_entry.clock_in).total_seconds()
+            sqlite_total_hours, sqlite_total_minutes = calculate_hours_and_minutes(sqlite_total_time)
+            mysql_total_hours += sqlite_total_hours
+            mysql_total_minutes += sqlite_total_minutes
+    return mysql_total_hours, mysql_total_minutes
+
+def calculate_hours_and_minutes(total_seconds):
+    hours = int(total_seconds / 60 // 60)
+    minutes = int(round(60*((total_seconds / 60 / 60) - hours), 0))
+    return hours, minutes
