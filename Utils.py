@@ -20,6 +20,7 @@ if os.path.exists('config.ini'):
     config = configparser.ConfigParser()
     config.read("config.ini")
 
+
 def update_employee_table():
     # Retrieve from remote DB
     try:
@@ -32,8 +33,9 @@ def update_employee_table():
         for employee in employees:
             current_employee = Employee(**employee)
             current_employee.insert('sqlite')
-    except MySQLdb.Error as e:
+    except MySQLdb.OperationalError as e:
         logger.exception("Caught exception connecting to database\n Error: {}".format(e))
+        raise
 
 
 def timed_messagebox(title, message):
@@ -53,20 +55,33 @@ def calculate_hours_for_the_week(employee_id):
     else:
         date_param = between(datetime.date.today() + datetime.timedelta(days=-current_date), datetime.date.today())
     time_entries.entry_date = date_param
-    entries = time_entries.select_query('mysql')
+    try:
+        entries = time_entries.select_query('mysql')
+    except MySQLdb.OperationalError as e:
+        timed_messagebox("ERROR!", "Error while connceting to database, please try again later.")
+        logging.exception("Caught exception while connceting to database")
+        raise e
     df = pd.DataFrame.from_records(entries)
     mysql_total_time = df['total_time'].sum().total_seconds()
     mysql_total_hours, mysql_total_minutes = calculate_hours_and_minutes(mysql_total_time)
     # Get sqlite total time
-    time_entries = TimeEntries(employee_id=employee_id, entry_date=date_param).select_query('sqlite')
-    if time_entries:
-        time_entry = TimeEntries().load('sqlite', record=time_entries[0])
-        if time_entry.clock_in:
-            time_entry.to_datetime()
-            sqlite_total_time = (datetime.datetime.today() - time_entry.clock_in).total_seconds()
-            sqlite_total_hours, sqlite_total_minutes = calculate_hours_and_minutes(sqlite_total_time)
-            mysql_total_hours += sqlite_total_hours
-            mysql_total_minutes += sqlite_total_minutes
+    time_entries = TimeEntries(employee_id=employee_id).select_query('sqlite')
+    for entry in time_entries:
+        time_entry = TimeEntries()
+        time_entry.load('sqlite', record=entry)
+        time_entry.to_datetime()
+        if time_entry.clock_in and not time_entry.clock_out:
+            clock_in = time_entry.clock_in
+            clock_out = datetime.date.today()
+        elif time_entry.clock_in and time_entry.clock_out:
+            clock_in = time_entry.clock_in
+            clock_out = time_entry.clock_out
+        else:
+            timed_messagebox("Error", "There was an error in your clock entries, your total hour count may be off.")
+        sqlite_total_time = (clock_out - clock_in).total_seconds()
+        sqlite_total_hours, sqlite_total_minutes = calculate_hours_and_minutes(sqlite_total_time)
+        mysql_total_hours += sqlite_total_hours
+        mysql_total_minutes += sqlite_total_minutes
     return mysql_total_hours, mysql_total_minutes
 
 def calculate_hours_and_minutes(total_seconds):
