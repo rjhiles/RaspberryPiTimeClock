@@ -160,6 +160,7 @@ class UserMenu(Controller):
         entry_search.to_string()
         last_entry = entry_search.select_query('sqlite')
         if last_entry:
+            self.clock_error_confirmation("You are already clocked in, are you sure you want to clock in again?")
             entry = TimeEntries()
             entry.load('sqlite', record=last_entry[0])
             entry.error_entry = 1
@@ -212,6 +213,7 @@ class UserMenu(Controller):
             entry.update('sqlite')
         elif len(last_entry) == 0:
             # They missed a clock in
+            self.clock_error_confirmation("You are already clocked out, are you sure you want to clock out again?")
             messagebox.showerror(title='Erorr', message=config['MESSAGES']['MISSED_CLOCK_IN'])
             entry = TimeEntries(employee_id=self.employee.id,
                                 entry_date=datetime.date.today(),
@@ -230,6 +232,12 @@ class UserMenu(Controller):
             notification_entry = Notify()
             notification_entry.load('sqlite', record=notification[0])
             notification_entry.delete('sqlite')
+
+    @staticmethod
+    def clock_error_confirmation(message):
+        result = Utils.big_yes_no("ERROR", message)
+        if not result:
+            raise Exception
 
 
 # change process name from just python to TimeClock so we can use a bash script to make sure it is still alive
