@@ -29,7 +29,7 @@ class TimeClockServer(socketserver.BaseRequestHandler):
         time_entry.update()
 
 
-def run_server()
+def run_server():
     with socketserver.TCPServer((HOST, PORT), TimeClockServer) as server:
         server.serve_forever()
 
