@@ -12,7 +12,7 @@ import Utils
 import configparser
 import threading
 import Daemon
-import server
+
 
 if path.exists('config.ini'):
     config = configparser.ConfigParser()
