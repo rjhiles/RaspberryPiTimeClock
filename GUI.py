@@ -12,10 +12,12 @@ import Utils
 import configparser
 import threading
 import Daemon
+import server
 
 if path.exists('config.ini'):
     config = configparser.ConfigParser()
     config.read("config.ini")
+
 
 def double_digit(num):
     result = num
@@ -32,8 +34,10 @@ class Controller:
     def __init__(self, gui_root):
         Controller.master = gui_root
         Utils.update_employee_table()
-        thread = threading.Thread(target=Daemon.main_loop, daemon=True)
-        thread.start()
+        daemon_thread = threading.Thread(target=Daemon.main_loop, daemon=True)
+        daemon_thread.start()
+        server_thread = threading.Thread(target=server.run_server(), daemon=True)
+        server_thread.start()
         Authenticate()
 
 
