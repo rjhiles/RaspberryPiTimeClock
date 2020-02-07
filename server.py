@@ -4,7 +4,7 @@ import socketserver
 import pickle
 from Database import TimeEntries
 
-HOST, PORT = "localhost", 9999
+HOST, PORT = "192.168.0.20", 9999
 
 
 class TimeClockServer(socketserver.BaseRequestHandler):
