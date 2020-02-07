@@ -17,6 +17,12 @@ if path.exists('config.ini'):
     config = configparser.ConfigParser()
     config.read("config.ini")
 
+def double_digit(num):
+    result = num
+    if len(str(num)) < 2:
+        result = '0{}'.format(num)
+    return result
+
 
 class Controller:
 
@@ -60,11 +66,6 @@ class Authenticate(Controller):
         self.clock_frame.grid(row=0, column=2, padx=5, pady=10, sticky=N)
         self.tick()
 
-    def double_digit(num):
-        result = num
-        if len(str(num)) < 2:
-            result = '0{}'.format(num)
-        return result
 
     def tick(self):
         self.current_time = "{}:{}:{}".format(double_digit(time.localtime().tm_hour), double_digit(time.localtime().tm_min),
