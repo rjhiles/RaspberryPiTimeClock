@@ -30,6 +30,6 @@ class TimeClockServer(socketserver.BaseRequestHandler):
 
 
 def run_server():
-    with socketserver.TCPServer((HOST, PORT), TimeClockServer) as server:
-        server.serve_forever()
+    server = socketserver.TCPServer((HOST, PORT), TimeClockServer)
+    server.serve_forever()
 
