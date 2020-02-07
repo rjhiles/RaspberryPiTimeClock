@@ -18,7 +18,7 @@ class TimeClockServer(socketserver.BaseRequestHandler):
             self.update_time_entry()
 
     def retrieve_time_entries(self):
-        time_entries = TimeEntries(db_type='sqlite', employee_id=self.data_dict['ID']).select_query()
+        time_entries = TimeEntries(employee_id=self.data_dict['ID']).select_query(db_type='sqlite')
         msg = pickle.dumps(time_entries)
         print(time_entries)
         self.request.sendall(msg)
