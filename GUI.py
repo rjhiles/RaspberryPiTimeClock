@@ -223,7 +223,7 @@ class UserMenu(Controller):
         elif len(last_entry) == 0:
             # They missed a clock in
             self.clock_error_confirmation("You are already clocked out, are you sure you want to clock out again?")
-            messagebox.showerror(title='Erorr', message=config['MESSAGES']['MISSED_CLOCK_IN'])
+            # messagebox.showerror(title='Erorr', message=config['MESSAGES']['MISSED_CLOCK_IN'])
             entry = TimeEntries(employee_id=self.employee.id,
                                 entry_date=datetime.date.today(),
                                 clock_out=datetime.datetime.today(),
@@ -244,9 +244,11 @@ class UserMenu(Controller):
 
     @staticmethod
     def clock_error_confirmation(message):
-        result = Utils.big_yes_no("ERROR", message)
+        # result = Utils.big_yes_no("ERROR", message)
+        result = messagebox.askyesno("ERROR", message=message)
         if not result:
             raise Exception
+
 
 
 # change process name from just python to TimeClock so we can use a bash script to make sure it is still alive
