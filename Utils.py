@@ -5,7 +5,7 @@ from Database import *
 import logging
 import MySQLdb
 import datetime
-from tkinter import Toplevel, Message
+from tkinter import Toplevel, Message, Button
 import configparser
 import os
 
@@ -42,3 +42,25 @@ def timed_messagebox(title, message):
     m.config(font=('TkDefaultFont', 20))
     m.pack()
     messagebox.after(3000, messagebox.destroy)
+
+
+
+
+def destroy(option, root):
+    root.destroy()
+    return option
+
+
+def big_yes_no(title, message):
+    messagebox = Toplevel()
+    messagebox.title(title)
+    m = Message(messagebox, text=message, padx=100, pady=100)
+    m.config(font=('TkDefaultFont', 20))
+    m.grid(row=0, column=1)
+    yes = Button(messagebox, text='Yes', command= lambda x=messagebox: destroy(1, x))
+    yes.config(font=('TkDefaultFont', 20))
+    yes.grid(row=1, column=0)
+    no = Button(messagebox, text='No', command=lambda x =messagebox: destroy(0, x))
+    no.config(font=('TkDefaultFont', 20))
+    no.grid(row=1, column=2)
+
