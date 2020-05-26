@@ -16,6 +16,8 @@ class TimeClockServer(socketserver.BaseRequestHandler):
             self.retrieve_time_entries()
         elif self.data_dict['Action'] == 'UPDATE':
             self.update_time_entry()
+        elif self.data_dict['Action'] == 'NEW'
+            self.add_time_entry()
 
     def retrieve_time_entries(self):
         time_entries = TimeEntries(employee_id=self.data_dict['ID']).select_query(db_type='sqlite')
@@ -27,6 +29,12 @@ class TimeClockServer(socketserver.BaseRequestHandler):
         time_entry = self.data_dict['TimeEntry']
         time_entry.db_type = 'sqlite'
         time_entry.update()
+
+    def add_time_entry(self):
+        time_entry = self.data_dict['TimeEntry']
+        time_entry.db_type = 'sqlite'
+        time_entry.insert()
+
 
 
 server = socketserver.TCPServer((HOST, PORT), TimeClockServer)
