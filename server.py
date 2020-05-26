@@ -16,7 +16,7 @@ class TimeClockServer(socketserver.BaseRequestHandler):
             self.retrieve_time_entries()
         elif self.data_dict['Action'] == 'UPDATE':
             self.update_time_entry()
-        elif self.data_dict['Action'] == 'NEW'
+        elif self.data_dict['Action'] == 'NEW':
             self.add_time_entry()
 
     def retrieve_time_entries(self):
