@@ -25,7 +25,7 @@ def transport_completed_entries():
             try:
                 mysql_entry.insert('mysql')
             except Exception as e:
-                logging.exception("Error transporting entries.  Error  {}".format(e))
+                logging.exception("=================================\nError transporting entries.  Error  {}".format(e))
                 continue
             else:
                 entry.delete('sqlite')

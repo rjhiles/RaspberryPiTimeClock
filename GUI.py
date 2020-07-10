@@ -68,7 +68,6 @@ class Authenticate(Controller):
         self.clock_frame.grid(row=0, column=2, padx=5, pady=10, sticky=N)
         self.tick()
 
-
     def tick(self):
         self.current_time = "{}:{}:{}".format(double_digit(time.localtime().tm_hour), double_digit(time.localtime().tm_min),
                                               double_digit(time.localtime().tm_sec))
@@ -127,7 +126,6 @@ class Authenticate(Controller):
         self.user_listbox.config(width=0, yscrollcommand=scroll.set)
         self.user_listbox.grid(row=0, column=0)
         scroll.grid(row=0, column=1,sticky=NS)
-
 
 
 class UserMenu(Controller):

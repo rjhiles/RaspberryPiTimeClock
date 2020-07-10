@@ -18,11 +18,12 @@ class TimeClockServer(socketserver.BaseRequestHandler):
             self.update_time_entry()
         elif self.data_dict['Action'] == 'NEW':
             self.add_time_entry()
+        elif self.data_dict['Action'] == 'ALL RECORDS':
+            self.all_records()
 
     def retrieve_time_entries(self):
         time_entries = TimeEntries(employee_id=self.data_dict['ID']).select_query(db_type='sqlite')
         msg = pickle.dumps(time_entries)
-        print(time_entries)
         self.request.sendall(msg)
 
     def update_time_entry(self):
@@ -35,6 +36,10 @@ class TimeClockServer(socketserver.BaseRequestHandler):
         time_entry.db_type = 'sqlite'
         time_entry.insert()
 
+    def all_records(self):
+        time_entries = TimeEntries().select_query('sqlite')
+        msg = pickle.dumps(time_entries)
+        self.request.sendall(msg)
 
 
 server = socketserver.TCPServer((HOST, PORT), TimeClockServer)
