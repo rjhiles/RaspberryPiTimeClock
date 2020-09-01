@@ -36,10 +36,12 @@ def set_employee_notification(employee_id, missed_entry_date):
     notification.to_string()
     notification.insert('sqlite')
 
+
 def main_loop():
     while True:
         transport_completed_entries()
         sleep(60)
+
 
 logger = logging.getLogger(__name__)
 file_handler = logging.FileHandler('Utils.log')
