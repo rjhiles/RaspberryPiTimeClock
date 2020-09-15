@@ -9,6 +9,11 @@ HOST, PORT = "192.168.0.20", 9999
 
 class TimeClockServer(socketserver.BaseRequestHandler):
 
+    def __init__(self):
+        super.__init__()
+        self.data = None
+        self.data_dict = None
+
     def handle(self):
         self.data = self.request.recv(1024)
         self.data_dict = pickle.loads(self.data)
@@ -42,6 +47,5 @@ class TimeClockServer(socketserver.BaseRequestHandler):
         self.request.sendall(msg)
 
 
-server = socketserver.TCPServer((HOST, PORT), TimeClockServer)
-server.serve_forever()
-
+with socketserver.TCPServer((HOST, PORT), TimeClockServer) as server:
+    server.serve_forever()
