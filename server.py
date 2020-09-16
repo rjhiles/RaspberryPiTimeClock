@@ -9,11 +9,6 @@ HOST, PORT = "192.168.0.20", 9999
 
 class TimeClockServer(socketserver.BaseRequestHandler):
 
-    def __init__(self):
-        super.__init__()
-        self.data = None
-        self.data_dict = None
-
     def handle(self):
         self.data = self.request.recv(1024)
         self.data_dict = pickle.loads(self.data)
