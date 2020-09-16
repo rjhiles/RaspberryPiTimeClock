@@ -37,7 +37,7 @@ class Controller:
         Utils.update_employee_table()
         daemon_thread = threading.Thread(target=Daemon.main_loop, daemon=True)
         daemon_thread.start()
-        server_daemon = threading.Thread(target=server.run_server(), daemon=True)
+        server_daemon = threading.Thread(target=server.run_server, daemon=True)
         server_daemon.start()
         Authenticate()
 
