@@ -52,20 +52,20 @@ class Authenticate(Controller):
         self.pin_var = StringVar()
         self.pin_entry = Entry(self.keypad_frame, textvariable=self.pin_var, show="*")
         self.make_keypad()
-        self.keypad_frame.grid(row=0, column=0, padx=5, pady=5, sticky=NSEW)
+        self.keypad_frame.grid(row=0, column=0, padx=5, pady=5, rowspan=2, sticky=NSEW)
         # User Menu Items
         self.user_list_frame = Frame(Controller.frame)
-        self.user_listbox = Listbox(self.user_list_frame, font=("Calibri", 20))
+        self.user_listbox = Listbox(self.user_list_frame, font=("Calibri", 30), height=7)
         self.user_dict = {}
         self.build_user_list()
-        self.user_list_frame.grid(row=0, column=1, padx=5, pady=5)
+        self.user_list_frame.grid(row=1, column=1, padx=5, pady=1)
         # Clock
         self.clock_frame = Frame(Controller.frame)
         self.current_time = "{}:{}:{}".format(time.localtime().tm_hour, time.localtime().tm_min,time.localtime().tm_sec)
         self.clock_face = Label(self.clock_frame, text=self.current_time)
         self.clock_face.config(font=('TkDefaultFont', 30))
         self.clock_face.grid(row=0, column=0)
-        self.clock_frame.grid(row=0, column=2, padx=5, pady=10, sticky=N)
+        self.clock_frame.grid(row=0, column=1, padx=5, pady=0, sticky=N)
         self.tick()
 
     def tick(self):
@@ -122,8 +122,8 @@ class Authenticate(Controller):
             self.user_dict[emp_name] = emp.id
             self.user_listbox.insert(END, emp_name)
         scroll = Scrollbar(self.user_list_frame, width=50)
-        scroll.config(command=self.user_listbox.yview())
         self.user_listbox.config(width=0, yscrollcommand=scroll.set)
+        scroll.config(command=self.user_listbox.yview)
         self.user_listbox.grid(row=0, column=0)
         scroll.grid(row=0, column=1,sticky=NS)
 
