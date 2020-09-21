@@ -57,7 +57,7 @@ class Authenticate(Controller):
         self.pin_var = StringVar()
         self.pin_entry = Entry(self.keypad_frame, textvariable=self.pin_var, show="*")
         self.make_keypad()
-        self.keypad_frame.grid(row=0, column=0, padx=5, pady=5, rowspan=2, sticky=NSEW)
+        self.keypad_frame.grid(row=0, column=0, padx=15, pady=5, rowspan=2, sticky=NSEW)
         # User Menu Items
         self.user_list_frame = Frame(Controller.frame)
         self.user_listbox = Listbox(self.user_list_frame, font=("Calibri", 30), height=7)
