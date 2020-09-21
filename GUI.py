@@ -13,6 +13,7 @@ import configparser
 import threading
 import Daemon
 import server
+import session_lock
 
 
 if path.exists('config.ini'):
@@ -33,6 +34,7 @@ class Controller:
     frame = None
 
     def __init__(self, gui_root):
+        session_lock.session_lock_check()
         Controller.master = gui_root
         Utils.update_employee_table()
         daemon_thread = threading.Thread(target=Daemon.main_loop, daemon=True)
