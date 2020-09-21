@@ -11,7 +11,7 @@ def apply_lock():
         file.write(pid)
 
 
-def instance_running_check():
+def session_lock_check():
     if os.path.exists(TIME_CLOCK):
         with open(TIME_CLOCK, 'r') as lock_file:
             lock_file_pid = lock_file.readline()
