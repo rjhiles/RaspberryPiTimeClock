@@ -19,4 +19,4 @@ def session_lock_check():
             # The process is running, kill this one
             sys.exit("process is already running")
         else:
-            apply_lock(lock_file)
+            apply_lock()
