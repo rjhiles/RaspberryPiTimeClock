@@ -20,3 +20,5 @@ def session_lock_check():
             sys.exit("process is already running")
         else:
             apply_lock()
+    else:
+        apply_lock()
