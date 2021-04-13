@@ -44,4 +44,5 @@ class TimeClockServer(socketserver.BaseRequestHandler):
 
 def run_server():
     with socketserver.TCPServer((HOST, PORT), TimeClockServer) as server:
+        server.allow_reuse_address = True
         server.serve_forever()
