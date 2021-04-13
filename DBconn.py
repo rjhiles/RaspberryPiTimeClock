@@ -1,7 +1,9 @@
 # /usr/bin/python3
 
-import MySQLdb
-import MySQLdb.cursors
+#import MySQLdb
+#import MySQLdb.cursors
+import pymysql
+import pymysql.cursors
 import sqlite3
 import os
 import configparser
@@ -35,13 +37,14 @@ class DBConn:
                 user = os.environ['TIMECLOCK_DB_USER']
                 passwd = os.environ['TIMECLOCK_DB_PWD']
                 db = os.environ['TIMECLOCK_DB_NAME']
-            self.conn = MySQLdb.Connection(
+            self.conn = pymysql.Connection(
                 host=host,
                 user=user,
                 passwd=passwd,
                 port=3306,
                 db=db,
-                cursorclass=MySQLdb.cursors.DictCursor)
+                #cursorclass=MySQLdb.cursors.DictCursor,
+		cursorclass=pymysql.cursors.DictCursor)
         elif db_type == 'sqlite':
             self.conn = sqlite3.connect('TimeClock.db')
             self.conn.row_factory = self.dict_factory

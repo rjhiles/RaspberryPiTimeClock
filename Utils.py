@@ -3,7 +3,7 @@
 from DBconn import DBConn
 from Database import *
 import logging
-import MySQLdb
+import pymysql
 import datetime
 from tkinter import Toplevel, Message, Button
 import configparser
@@ -32,7 +32,7 @@ def update_employee_table():
         for employee in employees:
             current_employee = Employee(**employee)
             current_employee.insert('sqlite')
-    except MySQLdb.Error as e:
+    except pymysql.Error as e:
         logger.exception("Caught exception connecting to database\n Error: {}".format(e))
 
 
